@@ -6,3 +6,10 @@ from datetime import datetime
 
 # Fix Windows console encoding for Czech characters
 sys.stdout.reconfigure(encoding='utf-8')
+
+class year:
+    def __init__(self, ):
+        weeks = []
+        timer = 10000
+        
+        pass
