@@ -7,12 +7,12 @@ from datetime import datetime
 
 # Fix Windows console encoding for Czech characters
 sys.stdout.reconfigure(encoding='utf-8')
-
+#not using the class
 class Task:
-    def __init__(self, name, date): 
+    def __init__(self, name, date, score=None): 
         self.name = name
         self.date = date
-       
+        self.score = score
     
 
 
