@@ -26,7 +26,7 @@ sys.stdout.reconfigure(encoding='utf-8')
 
 # global variables
 nAll_tasks = All_tasks()
-goal = Goal()
+goal = Goal(nAll_tasks)
 GUI = GUI(nAll_tasks, goal)
 GUI.menu()
 

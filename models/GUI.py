@@ -13,8 +13,8 @@ class GUI:
 
     def menu(self):
         self.head()
-        # with open('number_timer.txt', 'r') as f:
-        #     self.x = int(f.read())  
+        
+       #when creating the subclass the subclass has to be unique
         
           
         #the progarm
@@ -30,8 +30,7 @@ class GUI:
                     "if you want to setting tasks press 5\n" +
                     "if you want to update tasks press 6\n" +
                     "if you want remove column press 7\n" +
-                    "if you want to set the timer press 8\n" +
-                    "if you want to - timer press 9\n" +
+                    "if you want remove goal press 8\n" +
                     "if you want quit press q")
             answer = input()
             match answer:
@@ -54,9 +53,9 @@ class GUI:
                 case "7":
                     self.delete_column()
                 case "8":
-                    self.set_timer()
-                case "9":
-                    self.change_timer()
+                    self.delete_goal()
+              
+                
                 case "q":
                     self.allTasks.save_data_frame()
                     break
@@ -74,11 +73,13 @@ class GUI:
     def add_goal(self):
         print("add a goal name")
         goal = input()
+        print("give me name that will be used as sorting")
+        subclass = input()
         print("set timer")
-        time_input = input()
+        time_input = int(input())
         print("set avrage score you find succesfull")
         avrage_score = int(input())
-        goals = [goal, time_input, avrage_score]
+        goals = [goal, subclass, time_input, avrage_score]
         self.goal.add_goal(goals)
         
         
@@ -117,7 +118,7 @@ class GUI:
         dont_understand = input()
         print("what is your next step")
         next_step = input()
-        self.allTasks.setting_task(name, index_to_use, score, learnt, dont_understand, next_step)
+        self.allTasks.setting_task(index_to_use, score, learnt, dont_understand, next_step)
         
     def update_task(self):
         print("select the task by name")
@@ -162,10 +163,10 @@ class GUI:
             desired_time_spent = int(input())
             self.allTasks.list_of_all_tasks_objects[index_to_use][3] = desired_time_spent
             self.allTasks.update_data_frame()
-            self.change_timer(desired_time_spent)
+            self.timer_managment(index_to_use, desired_time_spent)
         else:
-            self.change_timer(self.allTasks.list_of_all_tasks_objects[index_to_use][3])
-            pass
+            self.timer_managment(index_to_use, self.allTasks.list_of_all_tasks_objects[index_to_use][3])
+            
         print("do you want to change the score press y/n")
         yn4 = input()
         
@@ -228,10 +229,11 @@ class GUI:
     def delete_column(self):
         self.allTasks.delete_column()
         
-   #q
-   #def add_column
 
-
+    def timer_managment(self, index1, value):
+        self.goal.upadating_timer(index1, value)
         
-
-
+    def delete_goal(self):
+        print("give index of goal you want to del")
+        index = int(input())
+        self.goal.removing_timer(index)

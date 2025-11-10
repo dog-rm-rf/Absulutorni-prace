@@ -26,10 +26,10 @@ class All_tasks:
         self.update_data_frame()
     
     def setting_task(self, index, score, learnt, dont_understand, next_step):
-        self.list_of_all_tasks_objects[index][3] = score
-        self.list_of_all_tasks_objects[index][4][0] = learnt
-        self.list_of_all_tasks_objects[index][4][1] = dont_understand
-        self.list_of_all_tasks_objects[index][4][2] = next_step
+        self.list_of_all_tasks_objects[index][4] = score
+        self.list_of_all_tasks_objects[index][5][0] = learnt
+        self.list_of_all_tasks_objects[index][5][1] = dont_understand
+        self.list_of_all_tasks_objects[index][5][2] = next_step
         self.update_data_frame()   
         
     def update_data_frame(self):
