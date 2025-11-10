@@ -1,9 +1,9 @@
 # -*- coding: utf-8 -*-
 import sys
 import io
-import mysql.connector
+#import mysql.connector
 from datetime import datetime 
-from models.task import Task
+#from models.task import Task
 from models.all_tasks import All_tasks
 from models.GUI import GUI
 

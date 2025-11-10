@@ -27,15 +27,35 @@
 # my_tasks.remove(task1)
 
 
-old_tasks = [["beh", "1", 5], ["run", "2", 8]]
-task0 = old_tasks[0]
-task1 = old_tasks[1]
-def add():
-    task0.append(1)
-    task0.append(2)
-    return task0
-print(add())
-#if old_tasks[0] == 
+# -*- coding: utf-8 -*-
+import sqlite3
+import sys
+import io
+import os
+from datetime import datetime 
+import pandas as pd
 
+# Fix Windows console encoding for Czech characters
+sys.stdout.reconfigure(encoding='utf-8')
+from pathlib import Path
+
+sum = 5
+
+# if Path('number_timer.txt').exists():
+#     x = Path('number_timer.txt')
+#     print(f"{x}")
+# else:
+#     y = Path('number_timer.txt')
+#     print(f"{y}")
+def setting(minus):
+    sum -= minus
+    return sum
+    
+
+setting(2)
+u = Path('number_timer.txt').write_text(str(sum))
+i = Path('number_timer.txt').read_text()
+setting(2)
+print(f"{i}")
 
 
