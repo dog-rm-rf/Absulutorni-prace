@@ -6,18 +6,23 @@ sys.stdout.reconfigure(encoding='utf-8')
 
 class GUI:
 
-    def __init__(self, allTasks):
+    def __init__(self, allTasks, goal):
         self.allTasks = allTasks
+        self.goal = goal
+
 
     def menu(self):
         self.head()
-        with open('number_timer.txt', 'r') as f:
-            self.x = int(f.read())  
+        # with open('number_timer.txt', 'r') as f:
+        #     self.x = int(f.read())  
         
           
         #the progarm
         while True:
-            print(  f"timer is {self.x}\n"
+            for x in self.goal.list_of_all_goals_objects:
+                print(f"Your goals for your 12 weeks are {x}\n")
+            print(  
+                    "setting your goal for 12 weeks press 0\n" +
                     "If you want add task press 1\n" + 
                     "if you want remove press 2\n" +
                     "if you want to see all tasks press 3\n" + 
@@ -30,6 +35,8 @@ class GUI:
                     "if you want quit press q")
             answer = input()
             match answer:
+                case "0":
+                    self.add_goal()
                     # add
                 case "1":
                     self.add_task()
@@ -59,12 +66,20 @@ class GUI:
         print("Hello welcome to 12 week app")  
 
         
-    def set_timer(self):
-        print("set the timer")
-        timer = input()
-        with open('number_timer.txt', 'w') as f:
-            f.write(timer)
-            self.x = int(timer)
+    # def set_timer(self):
+    #     print("set the timer")
+    #     timer = input()
+    #     self.x = self.allTasks.setting_timer(timer)
+
+    def add_goal(self):
+        print("add a goal name")
+        goal = input()
+        print("set timer")
+        time_input = input()
+        print("set avrage score you find succesfull")
+        avrage_score = int(input())
+        goals = [goal, time_input, avrage_score]
+        self.goal.add_goal(goals)
         
         
     def add_task(self):  

@@ -39,23 +39,10 @@ import pandas as pd
 sys.stdout.reconfigure(encoding='utf-8')
 from pathlib import Path
 
-sum = 5
 
-# if Path('number_timer.txt').exists():
-#     x = Path('number_timer.txt')
-#     print(f"{x}")
-# else:
-#     y = Path('number_timer.txt')
-#     print(f"{y}")
-def setting(minus):
-    sum -= minus
-    return sum
-    
+list_of_all_goals_objects = [["goal1", "goal2", "goal3"], ["goal4", "goal5", "goal6"]]
 
-setting(2)
-u = Path('number_timer.txt').write_text(str(sum))
-i = Path('number_timer.txt').read_text()
-setting(2)
-print(f"{i}")
+for x in list_of_all_goals_objects:
+    print(f"Your goals for your 12 weeks are {x}\n")
 
 
