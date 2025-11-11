@@ -1,18 +1,20 @@
 import sys
 from pathlib import Path
 import os
+import datetime
 # Fix Windows console encoding for Czech characters
 sys.stdout.reconfigure(encoding='utf-8')
 
 class GUI:
 
-    def __init__(self, allTasks, goal):
+    def __init__(self, allTasks, goal, addiction):
         self.allTasks = allTasks
         self.goal = goal
-
+        self.addiction = addiction
 
     def menu(self):
         self.head()
+        self.log_in_time = datetime.datetime.now()
         
        #when creating the subclass the subclass has to be unique
         
@@ -31,6 +33,11 @@ class GUI:
                     "if you want to update tasks press 6\n" +
                     "if you want remove column press 7\n" +
                     "if you want remove goal press 8\n" +
+                    "if you want add addiction press 9\n" +
+                    "if you want review addictions press 10\n" +
+                    "if you want show addictions press 11\n" +
+                    "on the end of the day to review addictions press 12\n" +
+                    "show copies of addictions press 13\n" +
                     "if you want quit press q")
             answer = input()
             match answer:
@@ -54,8 +61,16 @@ class GUI:
                     self.delete_column()
                 case "8":
                     self.delete_goal()
-              
-                
+                case "9":
+                    self.add_addiction_to_original()
+                # case "10":
+                #     self.add_addiction_to_copy()
+                case "11":
+                    self.show_addictions()    
+                case "12":
+                    self.writing_yes_no_addiction()   
+                case "13":
+                    self.show_list_copies()   
                 case "q":
                     self.allTasks.save_data_frame()
                     break
@@ -207,7 +222,7 @@ class GUI:
             self.allTasks.update_data_frame()
         else:
             pass
-        
+            
 
     def remove_task_gui(self):
         print("which task you want to remove\n type name of task ")
@@ -237,3 +252,26 @@ class GUI:
         print("give index of goal you want to del")
         index = int(input())
         self.goal.removing_timer(index)
+
+
+    def add_addiction_to_original(self):
+        print("type name of addiction")
+        name_addiction = input()
+        print("type date")
+        date_addiction = input()
+        did_you_manage_addiction_y_n = None
+        addiction = [name_addiction, date_addiction, did_you_manage_addiction_y_n]
+        self.addiction.add_addiction_into_original(addiction)
+    
+    def writing_yes_no_addiction(self):
+        for x in self.addiction.list_of_all_addiction_objects_original:
+            print(f"did you overcome the addiction {x[0]} y/n")
+            y_n = input()
+            self.addiction.add_addiction_into_copy(x, y_n)
+
+    def show_addictions(self):
+        self.addiction.show_addiction()
+
+    def show_list_copies(self):
+        self.addiction.show_copies()
+

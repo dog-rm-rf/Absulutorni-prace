@@ -7,6 +7,7 @@ from datetime import datetime
 from models.all_tasks import All_tasks
 from models.GUI import GUI
 from models.goal import Goal
+from models.addiction import Addiction
 
 
 # Fix Windows console encoding for Czech characters
@@ -26,8 +27,9 @@ sys.stdout.reconfigure(encoding='utf-8')
 
 # global variables
 nAll_tasks = All_tasks()
+nAddiction = Addiction()
 goal = Goal(nAll_tasks)
-GUI = GUI(nAll_tasks, goal)
+GUI = GUI(nAll_tasks, goal, nAddiction)
 GUI.menu()
 
 
