@@ -36,7 +36,7 @@ class Addiction:
 
     def add_addiction_into_copy(self, whole_addiction, y_n):
         self.list_of_all_addiction_objects_copy.append(whole_addiction)
-        self.list_of_all_addiction_objects_copy[-1][1] = y_n
+        self.list_of_all_addiction_objects_copy[-1][2] = y_n
         self.update_df_addiction_copy()
 
         #date shouold be there just to track when it started, but i want to not show the date in gui

@@ -2,19 +2,23 @@ import sys
 from pathlib import Path
 import os
 import datetime
+from datetime import date
+from dateutil import parser
 # Fix Windows console encoding for Czech characters
 sys.stdout.reconfigure(encoding='utf-8')
 
 class GUI:
 
-    def __init__(self, allTasks, goal, addiction):
+    def __init__(self, allTasks, goal, addiction, filter_file):
         self.allTasks = allTasks
         self.goal = goal
         self.addiction = addiction
+        self.filter_file = filter_file
+        
 
     def menu(self):
         self.head()
-        self.log_in_time = datetime.datetime.now()
+        self.log_in_time = date.now()
         
        #when creating the subclass the subclass has to be unique
         
@@ -26,7 +30,7 @@ class GUI:
             print(  
                     "setting your goal for 12 weeks press 0\n" +
                     "If you want add task press 1\n" + 
-                    "if you want remove press 2\n" +
+                    "if you want remove task press 2\n" +
                     "if you want to see all tasks press 3\n" + 
                     "if you want to see tasks for one day press 4\n" +
                     "if you want to setting tasks press 5\n" +
@@ -38,6 +42,7 @@ class GUI:
                     "if you want show addictions press 11\n" +
                     "on the end of the day to review addictions press 12\n" +
                     "show copies of addictions press 13\n" +
+                    "start the year 14 weeks\n"
                     "if you want quit press q")
             answer = input()
             match answer:
@@ -71,6 +76,8 @@ class GUI:
                     self.writing_yes_no_addiction()   
                 case "13":
                     self.show_list_copies()   
+                case "14":
+                    self.show_list_copies() 
                 case "q":
                     self.allTasks.save_data_frame()
                     break
@@ -94,7 +101,8 @@ class GUI:
         time_input = int(input())
         print("set avrage score you find succesfull")
         avrage_score = int(input())
-        goals = [goal, subclass, time_input, avrage_score]
+        date_of_creation = date.today()
+        goals = [goal, subclass, time_input, avrage_score, date_of_creation]
         self.goal.add_goal(goals)
         
         
@@ -103,8 +111,18 @@ class GUI:
         task_name = input()
         print("give me name of subclass")
         task_sub_class = input()
-        print("give me date:")
-        date = input()
+        #trying to set the date
+        print("Enter date (e.g. 2025-11-13, Nov 13 2025, 13/11/2025):")
+        user_input = input().strip()
+
+        try:
+            dt = parser.parse(user_input)#, dayfirst=True)   allow European style too
+            task_date = dt.date()
+        except ValueError:
+            print("Could not understand date. Using today's date instead.")
+            task_date = date.today()
+        
+        
         print("give me how much hours you want to spent on the task")
         desired_time_spent = int(input())
         #variables for review
@@ -114,7 +132,7 @@ class GUI:
         next_step = ""
         review = [learnt, dont_understand, next_step]
         #list
-        task = [task_name, task_sub_class, date, desired_time_spent, score, review]
+        task = [task_name, task_sub_class, task_date, desired_time_spent, score, review]
         self.allTasks.add_new_task(task)
         
     def setting_task(self):
@@ -274,4 +292,17 @@ class GUI:
 
     def show_list_copies(self):
         self.addiction.show_copies()
+        
+    def start_the_year_we_want_to_messure(self):
+        print("when you want to start the year. Type date:")
+        user_input = input().strip()
+
+        try:
+            dt = parser.parse(user_input)#, dayfirst=True)   allow European style too
+            year_start = dt.date()
+        except ValueError:
+            print("Could not understand date. Using today's date instead.")
+            year_start = date.today()
+            
+        self.filter_file.show_task_goals_for_12weeks(year_start)
 

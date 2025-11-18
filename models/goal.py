@@ -26,7 +26,7 @@ class Goal:
         self.update_df_goals()
         
     def update_df_goals(self):
-        self.data_frame = pd.DataFrame(self.list_of_all_goals_objects, columns=["goal_name", "subclass", "timer", "avrage_score"])
+        self.data_frame = pd.DataFrame(self.list_of_all_goals_objects, columns=["goal_name", "subclass", "timer", "avrage_score", "date_of_creation"])
         self.data_frame.to_pickle(self.file_data_frame_goal)
     
     def upadating_timer(self, index1, value):
