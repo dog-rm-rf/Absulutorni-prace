@@ -39,29 +39,34 @@ from dateutil import parser
 
 # Fix Windows console encoding for Czech characters
 sys.stdout.reconfigure(encoding='utf-8')
+print(sys.argv)
+# task = []
 
-task = []
+# def add_task():
+    
+#     print("Give me date (e.g. Nov 13, 2025 or 2025-11-13):")
+    
+#     user_input = input().strip()
+#     try:
+#         dt = parser.parse(user_input)
+#         task_date = dt.date()
+#     except ValueError:
+#         print("Couldn't parse date. Using today's date.")
+#         task_date = date.today()
 
-def add_task():
-    
-    print("Give me date (e.g. Nov 13, 2025 or 2025-11-13):")
-    
-    user_input = input().strip()
-    try:
-        dt = parser.parse(user_input)
-        task_date = dt.date()
-    except ValueError:
-        print("Couldn't parse date. Using today's date.")
-        task_date = date.today()
+#     task.append(task_date)
+#     return task
 
-    task.append(task_date)
-    return task
+# print(add_task())
+    
+    
+def add(a, b):
+    sum = a + b
+    return sum
 
-print(add_task())
-    
-    
-    
-
+add(5, 6)
+x = add(add(3, 6), 1)
+print (x)
     
     
     

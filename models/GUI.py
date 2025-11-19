@@ -1,26 +1,30 @@
 import sys
 from pathlib import Path
 import os
-import datetime
+
 from datetime import date
 from dateutil import parser
+from datetime import datetime
+
 # Fix Windows console encoding for Czech characters
 sys.stdout.reconfigure(encoding='utf-8')
 
 class GUI:
 
-    def __init__(self, allTasks, goal, addiction, filter_file):
+    def __init__(self, allTasks, goal, addiction, note, filter_file):
         self.allTasks = allTasks
         self.goal = goal
         self.addiction = addiction
+        self.note = note
         self.filter_file = filter_file
         
 
     def menu(self):
         self.head()
-        self.log_in_time = date.now()
+       
         
        #when creating the subclass the subclass has to be unique
+       #i want to create notes. Notes should have date when they were created and the topic it covers
         
           
         #the progarm
@@ -42,9 +46,11 @@ class GUI:
                     "if you want show addictions press 11\n" +
                     "on the end of the day to review addictions press 12\n" +
                     "show copies of addictions press 13\n" +
-                    "start the year 14 weeks\n"
+                    "start the year press 14\n"
+                    "create notes press 15\n"
+                    "show notes press 16\n"
                     "if you want quit press q")
-            answer = input()
+            answer = input().strip()
             match answer:
                 case "0":
                     self.add_goal()
@@ -78,6 +84,10 @@ class GUI:
                     self.show_list_copies()   
                 case "14":
                     self.show_list_copies() 
+                case "15":
+                    self.create_notes() 
+                case "16":
+                    self.show_note() 
                 case "q":
                     self.allTasks.save_data_frame()
                     break
@@ -94,23 +104,23 @@ class GUI:
 
     def add_goal(self):
         print("add a goal name")
-        goal = input()
+        goal = input().strip()
         print("give me name that will be used as sorting")
-        subclass = input()
+        subclass = input().strip()
         print("set timer")
-        time_input = int(input())
+        time_input = int(input().strip())
         print("set avrage score you find succesfull")
-        avrage_score = int(input())
-        date_of_creation = date.today()
+        avrage_score = int(input().strip())
+        date_of_creation = datetime.now()
         goals = [goal, subclass, time_input, avrage_score, date_of_creation]
         self.goal.add_goal(goals)
         
         
     def add_task(self):  
         print("give name to task:")
-        task_name = input()
+        task_name = input().strip()
         print("give me name of subclass")
-        task_sub_class = input()
+        task_sub_class = input().strip()
         #trying to set the date
         print("Enter date (e.g. 2025-11-13, Nov 13 2025, 13/11/2025):")
         user_input = input().strip()
@@ -120,11 +130,11 @@ class GUI:
             task_date = dt.date()
         except ValueError:
             print("Could not understand date. Using today's date instead.")
-            task_date = date.today()
+            task_date = datetime.now()
         
         
         print("give me how much hours you want to spent on the task")
-        desired_time_spent = int(input())
+        desired_time_spent = int(input().strip())
         #variables for review
         score = None
         learnt = ""
@@ -138,62 +148,62 @@ class GUI:
     def setting_task(self):
         #chtel bych mit reviews a v tom what i leartn what i dont understand, what should be next setp
         print("select the task by name")
-        name = input()
+        name = input().strip()
         print(self.allTasks.data_frame.loc[self.allTasks.data_frame['activity'] == name])
         print("select the index")
-        index_to_use = int(input())
+        index_to_use = int(input().strip())
         print("select score 0/10")
         score = int(input())
         print("type key notes(review = what you learnt, what you dont understand, what should be your next step)")
         print("what you learnt")
-        learnt = input()
+        learnt = input().strip()
         print("what do you not understand")
-        dont_understand = input()
+        dont_understand = input().strip()
         print("what is your next step")
-        next_step = input()
+        next_step = input().strip()
         self.allTasks.setting_task(index_to_use, score, learnt, dont_understand, next_step)
         
     def update_task(self):
         print("select the task by name")
-        name = input()
+        name = input().strip()
         print(self.allTasks.data_frame.loc[self.allTasks.data_frame['activity'] == name])
         print("select the index")
-        index_to_use = int(input())
+        index_to_use = int(input().strip())
         print("do you want to change the name pres y/n")
-        yn0 = input()
+        yn0 = input().strip()
         if(yn0 == "y"):
             print("type new name")
-            new_name = input()
+            new_name = input().strip()
             self.allTasks.list_of_all_tasks_objects[index_to_use][0] = new_name
             self.allTasks.update_data_frame()
         else:
             pass
         print("do you want to change the subclass press y/n")
-        yn1 = input()
+        yn1 = input().strip()
         
         if(yn1 == "y"):
             print("type new subclass")
-            subclass = input()
+            subclass = input().strip()
             self.allTasks.list_of_all_tasks_objects[index_to_use][1] = subclass
             self.allTasks.update_data_frame()
         else:
             pass
         print("do you want to change the date press y/n")
-        yn2 = input()
+        yn2 = input().strip()
         
         if(yn2 == "y"):
             print("type new date")
-            date = input()
+            date = input().strip()
             self.allTasks.list_of_all_tasks_objects[index_to_use][2] = date
             self.allTasks.update_data_frame()
         else:
             pass
         print("do you want to change the desired_time_spent press y/n, also it will change the main timer")
-        yn3 = input()
+        yn3 = input().strip()
         
         if(yn3 == "y"):
             print("type new desired_time_spent")
-            desired_time_spent = int(input())
+            desired_time_spent = int(input().strip())
             self.allTasks.list_of_all_tasks_objects[index_to_use][3] = desired_time_spent
             self.allTasks.update_data_frame()
             self.timer_managment(index_to_use, desired_time_spent)
@@ -201,41 +211,41 @@ class GUI:
             self.timer_managment(index_to_use, self.allTasks.list_of_all_tasks_objects[index_to_use][3])
             
         print("do you want to change the score press y/n")
-        yn4 = input()
+        yn4 = input().strip()
         
         if(yn4 == "y"):
             print("type new score")
-            score = int(input())
+            score = int(input().strip())
             self.allTasks.list_of_all_tasks_objects[index_to_use][4] = score
             self.allTasks.update_data_frame()
         else:
             pass
         print("do you want to change the learnt press y/n")
-        yn5 = input()
+        yn5 = input().strip()
         
         if(yn5 == "y"):
             print("type new learnt")
-            learnt = input()
+            learnt = input().strip()
             self.allTasks.list_of_all_tasks_objects[index_to_use][5][0] = learnt
             self.allTasks.update_data_frame()
         else:
             pass
         print("do you want to change the dont_understand press y/n")
-        yn6 = input()
+        yn6 = input().strip()
         
         if(yn6 == "y"):
             print("type new dont_understand")
-            dont_understand = input()
+            dont_understand = input().strip()
             self.allTasks.list_of_all_tasks_objects[index_to_use][5][1] = dont_understand
             self.allTasks.update_data_frame()
         else:
             pass
         print("do you want to change the next_step press y/n")
-        yn7 = input()
+        yn7 = input().strip()
         
         if(yn7 == "y"):
             print("type new next_step")
-            next_step = input()
+            next_step = input().strip()
             self.allTasks.list_of_all_tasks_objects[index_to_use][5][2] = next_step
             self.allTasks.update_data_frame()
         else:
@@ -244,10 +254,10 @@ class GUI:
 
     def remove_task_gui(self):
         print("which task you want to remove\n type name of task ")
-        task_remove_name = input()
+        task_remove_name = input().strip()
         print("I found these tasks with given name, give me the row number that you want to remove\n")
         print(self.allTasks.data_frame.loc[self.allTasks.data_frame['activity'] == task_remove_name])
-        index_to_remove = int(input())
+        index_to_remove = int(input().strip())
         self.allTasks.remove_task_df(index_to_remove)
 
     def show_all_tasks(self):
@@ -256,7 +266,7 @@ class GUI:
         #     print(f"Task: {task[0]}, Date: {task[1]}")
     
     def show_tasks_for_one_date(self):
-        date_to_find = input("What date do you want to see?\n")
+        date_to_find = input("What date do you want to see?\n").strip()
         print(self.allTasks.data_frame.loc[self.allTasks.data_frame['date'] == date_to_find])
         
     def delete_column(self):
@@ -268,15 +278,15 @@ class GUI:
         
     def delete_goal(self):
         print("give index of goal you want to del")
-        index = int(input())
+        index = int(input().strip())
         self.goal.removing_timer(index)
 
 
     def add_addiction_to_original(self):
         print("type name of addiction")
-        name_addiction = input()
+        name_addiction = input().strip()
         print("type date")
-        date_addiction = input()
+        date_addiction = input().strip()
         did_you_manage_addiction_y_n = None
         addiction = [name_addiction, date_addiction, did_you_manage_addiction_y_n]
         self.addiction.add_addiction_into_original(addiction)
@@ -284,7 +294,7 @@ class GUI:
     def writing_yes_no_addiction(self):
         for x in self.addiction.list_of_all_addiction_objects_original:
             print(f"did you overcome the addiction {x[0]} y/n")
-            y_n = input()
+            y_n = input().strip()
             self.addiction.add_addiction_into_copy(x, y_n)
 
     def show_addictions(self):
@@ -302,7 +312,20 @@ class GUI:
             year_start = dt.date()
         except ValueError:
             print("Could not understand date. Using today's date instead.")
-            year_start = date.today()
+            year_start = datetime.now()
             
         self.filter_file.show_task_goals_for_12weeks(year_start)
 
+    def create_notes(self):
+        date_value = datetime.now()
+        print("type subclass for exapmle math, programming")
+        subclass = input().strip()
+        print("type topic")
+        topic = input().strip()
+        print("type text")
+        text = input().strip()
+        note = [date_value, subclass, topic, text]
+        self.note.create_note(note)
+        
+    def show_note(self):
+        print(self.note.data_frame)

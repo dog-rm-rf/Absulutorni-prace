@@ -15,3 +15,4 @@ class Filter:
     @staticmethod
     def show_task_goals_for_12weeks(self, input_start_date_of_year):
         year = input_start_date_of_year + timedelta(weeks=12)
+
