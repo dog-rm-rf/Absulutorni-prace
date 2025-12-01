@@ -10,6 +10,7 @@ from models.goal import Goal
 from models.addiction import Addiction
 from models.filters import Filter
 from models.notes_class import Note
+from models.reward import Reward
 
 
 # Fix Windows console encoding for Czech characters
@@ -32,10 +33,11 @@ sys.stdout.reconfigure(encoding='utf-8')
 nAll_tasks = All_tasks()
 nAddiction = Addiction()
 nNote = Note()
+nReward = Reward()
 goal = Goal(nAll_tasks)
 nFilter = Filter(nAll_tasks)
 
-GUI = GUI(nAll_tasks, goal, nAddiction, nNote, nFilter)
+GUI = GUI(nAll_tasks, goal, nAddiction, nNote, nReward, nFilter)
 GUI.menu()
 
 

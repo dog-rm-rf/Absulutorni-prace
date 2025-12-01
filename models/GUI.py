@@ -11,12 +11,14 @@ sys.stdout.reconfigure(encoding='utf-8')
 
 class GUI:
 
-    def __init__(self, allTasks, goal, addiction, note, filter_file):
+    def __init__(self, allTasks, goal, addiction, note, reward, filter_file):
         self.allTasks = allTasks
         self.goal = goal
         self.addiction = addiction
         self.note = note
+        self.reward = reward
         self.filter_file = filter_file
+        
         
 
     def menu(self):
@@ -88,6 +90,10 @@ class GUI:
                     self.create_notes() 
                 case "16":
                     self.show_note() 
+                case "17":
+                    self.add_reward()
+                case "18":
+                    self.review_reward() 
                 case "q":
                     self.allTasks.save_data_frame()
                     break
@@ -329,3 +335,24 @@ class GUI:
         
     def show_note(self):
         print(self.note.data_frame)
+        
+    def add_reward(self):
+        date_value = datetime.now()
+        print("what is your reward for today")
+        reward_input = input()
+        print("how many hours you want spent on the reward")
+        time = int(input())
+        finished = False
+        reward = [date_value, reward_input, time, finished]
+        self.reward.add_reward(reward)
+        
+    def review_reward(self):
+        print("did you reward your self y/n")
+        y_n = input()
+        if(y_n == "y"):
+            print("how much time you spent on reward")
+            new_time = int(input())
+            finised = True
+        else:
+            pass
+            

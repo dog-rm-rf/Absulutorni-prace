@@ -1,6 +1,6 @@
 from PyQt5 import QtWidgets
 import sys
-from PyQt5.QtWidgets import QApplication, QMainWindow, QLabel, QVBoxLayout, QHBoxLayout, QWidget
+from PyQt5.QtWidgets import QApplication, QMainWindow, QLabel, QVBoxLayout, QHBoxLayout, QWidget, QPushButton
 from PyQt5.QtCore import Qt
 
 
@@ -10,6 +10,7 @@ app = QApplication(sys.argv) #setup
 window = QMainWindow()
 window.setGeometry(100, 100, 800, 600)
 window.setWindowTitle("12 week")
+
 
 # Create a central widget to hold everything
 central_widget = QWidget()
