@@ -19,3 +19,16 @@ Příklady mého kódu:
 
 ### Co ještě nerozumím:
 - (sem si piš otázky)
+
+
+# PYQT
+
+## things i learnt
+
+- app = QApplication(sys.argv)# this holds the event loop, can be only one instance of this object
+- class MainWindow(QMainWindow): # qmainwindow is parent
+- super().__init__()# we calling the init from the qmainwindow
+- signals are notifications emitted by widgets when something happens
+- slots are receivers of signals
+- button.setCheckable(True) = This makes the button a toggle button that stays pressed/unpressed. It changes the button's visual state, allowing it to be "checked" (pressed down) or "unchecked" (normal state)
+

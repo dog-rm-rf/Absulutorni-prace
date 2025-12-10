@@ -1,54 +1,38 @@
 import sys
 
-from PyQt5.QtCore import QSize, Qt
-from PyQt5.QtWidgets import QApplication, QMainWindow, QPushButton
-
-
-from PyQt5.QtWidgets import QApplication, QMainWindow, QPushButton
-
-import sys
-from random import choice
-
-window_titles = [
-    'My App',
-    'My App',
-    'Still My App',
-    'Still My App',
-    'What on earth',
-    'What on earth',
-    'This is surprising',
-    'This is surprising',
-    'Something went wrong'
-]
-
+from PyQt5.QtCore import Qt
+from PyQt5.QtWidgets import QAction, QApplication, QLabel, QMainWindow, QMenu, QCheckBox
+from PyQt5.QtGui import QPixmap
 
 class MainWindow(QMainWindow):
     def __init__(self):
         super().__init__()
-
-        self.n_times_clicked = 0
-
+        
         self.setWindowTitle("My App")
 
-        self.button = QPushButton("Press Me!")
-        self.button.clicked.connect(self.the_button_was_clicked)
+        widget = QCheckBox("This is a checkbox")
+        widget.setCheckState(Qt.Checked)
 
-        self.windowTitleChanged.connect(self.the_window_title_changed)
 
-        # Set the central widget of the Window.
-        self.setCentralWidget(self.button)
+        widget.stateChanged.connect(self.show_state)
 
-    def the_button_was_clicked(self):
-        print("Clicked.")
-        new_window_title = choice(window_titles)
-        print("Setting title:  %s" % new_window_title)
-        self.setWindowTitle(new_window_title)
+        
+        # widget = QLabel("Hola")
+        # widget.setPixmap(QPixmap("/home/vojtasek/3542.webp"))
+        # widget.setScaledContents(True)
 
-    def the_window_title_changed(self, window_title):
-        print("Window title changed: %s" % window_title)
+        # font = widget.font()
+        # font.setPointSize(50)
+        # widget.setFont(font)
+        # align_top_left = Qt.AlignLeft | Qt.AlignTop
+        # widget.setAlignment(Qt.AlignLeft | Qt.AlignTop)
+        
+        
+        self.setCentralWidget(widget)
+    def show_state(self, s):
+        print(s == Qt.Checked)
+        print(s)
 
-        if window_title == 'Something went wrong':
-            self.button.setDisabled(True)
 
 
 app = QApplication(sys.argv)

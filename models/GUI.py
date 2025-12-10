@@ -51,6 +51,8 @@ class GUI:
                     "start the year press 14\n"
                     "create notes press 15\n"
                     "show notes press 16\n"
+                    "add reward press 17\n"
+                    "review reward press 18\n"
                     "if you want quit press q")
             answer = input().strip()
             match answer:
