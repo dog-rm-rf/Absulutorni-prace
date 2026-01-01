@@ -1,9 +1,418 @@
 import sys
-from PyQt5.QtWidgets import QApplication, QMainWindow, QWidget, QVBoxLayout, QHBoxLayout, QLabel, QPushButton, QFrame
+from PyQt5.QtWidgets import QApplication, QMainWindow, QWidget, QVBoxLayout, QHBoxLayout, QLabel, QPushButton, QFrame, QMenu, QDialog, QLineEdit, QSpinBox, QFormLayout, QTextEdit
 from datetime import datetime, timedelta
 from PyQt5.QtCore import Qt
 from settings import Settings 
+from all_tasks import All_tasks  
+from goal import Goal 
+from notes_class import Note
 
+# ===== DIALOG PRO PŘIDÁNÍ TASKU =====
+class AddTaskDialog(QDialog):
+    """
+    Popup dialog pro přidání nového tasku
+    """
+    def __init__(self, date, parent=None):
+        super().__init__(parent)
+        self.date = date
+        self.task_data = None  # Sem uložíme data když user klikne Save
+        
+        # Nastavení okna
+        self.setWindowTitle("Add Task")
+        self.setModal(True)  # Blokuje hlavní okno dokud se nezavře
+        self.setFixedSize(400, 250)
+        
+        # Layout
+        layout = QVBoxLayout()
+        
+        # Formulář
+        form_layout = QFormLayout()
+        
+        # Datum (read-only, jen zobrazení)
+        date_label = QLabel(date.strftime("%d.%m.%Y"))
+        date_label.setStyleSheet("color: gray;")
+        form_layout.addRow("Date:", date_label)
+        
+        # Task Name
+        self.task_name_input = QLineEdit()
+        self.task_name_input.setPlaceholderText("Enter task name")
+        form_layout.addRow("Task Name:", self.task_name_input)
+        
+        # Subclass
+        self.subclass_input = QLineEdit()
+        self.subclass_input.setPlaceholderText("e.g. programming, health")
+        form_layout.addRow("Subclass:", self.subclass_input)
+        
+        # Hours a Minutes - vytvoř horizontal layout
+        time_layout = QHBoxLayout()
+        
+        # Hours SpinBox
+        self.hours_input = QSpinBox()
+        self.hours_input.setMinimum(0)
+        self.hours_input.setMaximum(24)
+        self.hours_input.setValue(2)  # Default 2 hodiny
+        self.hours_input.setSuffix(" h")  # Přidá "h" za číslo
+        
+        # Minutes SpinBox
+        self.minutes_input = QSpinBox()
+        self.minutes_input.setMinimum(0)
+        self.minutes_input.setMaximum(59)
+        self.minutes_input.setSingleStep(15)  # Krok po 15 minutách
+        self.minutes_input.setValue(0)  # Default 0 minut
+        self.minutes_input.setSuffix(" min")  # Přidá "min" za číslo
+        
+        # Přidej oba do horizontal layoutu
+        time_layout.addWidget(self.hours_input)
+        time_layout.addWidget(self.minutes_input)
+        
+        # Přidej celý time_layout do formuláře
+        form_layout.addRow("Time:", time_layout)
+        
+        layout.addLayout(form_layout)
+        
+        # Buttons (Cancel, Save)
+        buttons_layout = QHBoxLayout()
+        
+        cancel_button = QPushButton("Cancel")
+        cancel_button.clicked.connect(self.reject)  # Zavře dialog bez uložení
+        
+        save_button = QPushButton("Save")
+        save_button.clicked.connect(self.save_task)
+        save_button.setStyleSheet("background-color: #FFFFFF; color: black;")
+        
+        buttons_layout.addWidget(cancel_button)
+        buttons_layout.addWidget(save_button)
+        
+        layout.addLayout(buttons_layout)
+        
+        self.setLayout(layout)
+    
+    def save_task(self):
+        """
+        Uloží data a zavře dialog
+        """
+        # Získej hodnoty z inputů
+        task_name = self.task_name_input.text().strip()
+        subclass = self.subclass_input.text().strip()
+        # Získej hodiny a minuty
+        hours = self.hours_input.value()
+        minutes = self.minutes_input.value()
+        
+        # Převeď na desetinné číslo (např. 2h 30min = 2.5)
+        total_hours = hours + (minutes / 60.0)
+        
+        # Validace
+        if not task_name:
+            # TODO: Zobrazit chybovou hlášku
+            print("ERROR: Task name is required!")
+            return
+        
+        # Ulož data (v formátu pro all_tasks.add_new_task)
+        # [task_name, task_sub_class, task_date, desired_time_spent, score, review]
+        self.task_data = [
+            task_name,
+            subclass if subclass else "general",  # Default subclass
+            self.date,
+            total_hours,
+            None,  # score (zatím None)
+            ["", "", ""]  # review (learnt, dont_understand, next_step)
+        ]
+        
+        # Zavři dialog s úspěchem
+        self.accept()
+
+# ===== DIALOG PRO PŘIDÁNÍ NOTE =====
+class AddNoteDialog(QDialog):
+    """
+    Popup dialog pro přidání nové poznámky
+    """
+    def __init__(self, date, parent=None):
+        super().__init__(parent)
+        self.date = date
+        self.note_data = None  # Sem uložíme data když user klikne Save
+        
+        # Nastavení okna
+        self.setWindowTitle("Add Note")
+        self.setModal(True)
+        self.setFixedSize(500, 400)
+        
+        # Layout
+        layout = QVBoxLayout()
+        
+        # Formulář
+        form_layout = QFormLayout()
+        
+        # Datum (read-only)
+        date_label = QLabel(date.strftime("%d.%m.%Y"))
+        date_label.setStyleSheet("color: gray;")
+        form_layout.addRow("Date:", date_label)
+        
+        # Subclass
+        self.subclass_input = QLineEdit()
+        self.subclass_input.setPlaceholderText("e.g. math, programming, health")
+        form_layout.addRow("Subclass:", self.subclass_input)
+        
+        # Topic
+        self.topic_input = QLineEdit()
+        self.topic_input.setPlaceholderText("What is this note about?")
+        form_layout.addRow("Topic:", self.topic_input)
+        
+        layout.addLayout(form_layout)
+        
+        # Text (větší textové pole)
+        text_label = QLabel("Note Text:")
+        layout.addWidget(text_label)
+        
+        self.text_input = QTextEdit()
+        self.text_input.setPlaceholderText("Write your note here...")
+        self.text_input.setMinimumHeight(150)
+        layout.addWidget(self.text_input)
+        
+        # Buttons
+        buttons_layout = QHBoxLayout()
+        
+        cancel_button = QPushButton("Cancel")
+        cancel_button.clicked.connect(self.reject)
+        
+        save_button = QPushButton("Save")
+        save_button.clicked.connect(self.save_note)
+        save_button.setStyleSheet("background-color: #4CAF50; color: white;")
+        
+        buttons_layout.addWidget(cancel_button)
+        buttons_layout.addWidget(save_button)
+        
+        layout.addLayout(buttons_layout)
+        
+        self.setLayout(layout)
+    
+    def save_note(self):
+        """
+        Uloží note data a zavře dialog
+        """
+        # Získej hodnoty
+        subclass = self.subclass_input.text().strip()
+        topic = self.topic_input.text().strip()
+        text = self.text_input.toPlainText().strip()
+        
+        # Validace
+        if not topic:
+            print("ERROR: Topic is required!")
+            return
+        
+        if not text:
+            print("ERROR: Note text is required!")
+            return
+        
+        # Ulož data (v formátu pro note.create_note)
+        # [date_value, subclass, topic, text]
+        self.note_data = [
+            self.date,
+            subclass if subclass else "general",
+            topic,
+            text
+        ]
+        
+        # Zavři dialog
+        self.accept()
+
+# ===== TŘÍDA PRO JEDEN DEN =====
+class DayWidget(QWidget):
+    """
+    Widget pro jeden den - umožňuje context menu (pravé tlačítko)
+    """
+    #widget je top-level (např. samostatné okno) a musí být spravován ručně reference na parent=None
+    def __init__(self, date, parent=None, note_obj=None): #tohle jsou parametry, potrebujeme date, a parent je volitelny
+        super().__init__(parent) # kdyz neuvedeme parent tak parent je QWidget
+        self.date = date  # Uložíme si datum tohoto dne
+        self.parent_window = parent  # Odkaz na hlavní okno
+        self.note_obj = note_obj
+
+
+        # Layout pro tento den
+        self.layout = QVBoxLayout()
+        self.setLayout(self.layout)
+        
+        # Povolit context menu
+        self.setContextMenuPolicy(Qt.CustomContextMenu)
+        self.customContextMenuRequested.connect(self.show_context_menu)
+
+    def show_note_detail(self, note):
+        """
+        Zobrazí detail note v popup okně
+        """
+        # note = [date, subclass, topic, text]
+        date = note[0]
+        subclass = note[1]
+        topic = note[2]
+        text = note[3]
+        
+        # Vytvoř popup dialog
+        dialog = QDialog(self)
+        dialog.setWindowTitle(f"Note: {topic}")
+        dialog.setModal(True)
+        dialog.setMinimumSize(500, 400)
+        
+        # Layout
+        layout = QVBoxLayout()
+        
+        # Info (datum, subclass)
+        info_label = QLabel(f"📅 {date.strftime('%d.%m.%Y')} | 🏷️ {subclass}")
+        info_label.setStyleSheet("color: gray; font-size: 12px;")
+        layout.addWidget(info_label)
+        
+        # Topic (nadpis)
+        topic_label = QLabel(topic)
+        topic_label.setStyleSheet("font-size: 18px; font-weight: bold; margin-top: 10px;")
+        layout.addWidget(topic_label)
+        
+        # Text (obsah)
+        text_display = QTextEdit()
+        text_display.setPlainText(text)
+        text_display.setReadOnly(True)  # Jen čtení, ne editace
+        layout.addWidget(text_display)
+        
+        # Close button
+        close_button = QPushButton("Close")
+        close_button.clicked.connect(dialog.close)
+        layout.addWidget(close_button)
+        
+        dialog.setLayout(layout)
+        dialog.exec_()
+    
+    def show_context_menu(self, position):
+        """
+        Zobrazí context menu při pravém kliknutí
+        """
+        # Vytvoř menu
+        menu = QMenu(self)
+        
+        # Přidej akce (možnosti)
+        add_task_action = menu.addAction("Add Task")
+        add_note_action = menu.addAction("Add Note")    
+        add_reward_action = menu.addAction("Add Reward")
+        
+        # Zobraz menu a čekej na kliknutí
+        action = menu.exec_(self.mapToGlobal(position))
+        
+        # Zjisti co uživatel klikl
+        if action == add_task_action:
+            self.parent_window.add_task_for_date(self.date)
+        elif action == add_note_action:
+            self.parent_window.add_note_for_date(self.date)
+        elif action == add_reward_action:
+            self.parent_window.add_reward_for_date(self.date)
+
+
+    def update_content(self, date, day_name, all_tasks_obj, note_obj=None):
+        """
+        Aktualizuje obsah widgetu (datum + tasky) pro nový týden
+        
+        Args:
+            date: Nové datum pro tento widget
+            day_name: Název dne (Mon, Tue, ...)
+            all_tasks_obj: Odkaz na All_tasks objekt
+        """
+        self.note_obj = note_obj 
+        # Zakaž překreslování během aktualizace
+        self.setUpdatesEnabled(False)
+
+        # Aktualizuj uložené datum
+        self.date = date
+        
+        # Vyčisti layout (smaž všechny widgety)
+        while self.layout.count():
+            child = self.layout.takeAt(0)
+            if child.widget():
+                child.widget().deleteLater()
+        
+        # Formátuj datum
+        date_str = f"{date.day}.{date.month}"
+        
+        # Vytvoř nový day_label
+        day_label = QLabel(f"{day_name}\n{date_str}")
+        day_label.setAlignment(Qt.AlignCenter)
+        day_label.setStyleSheet("color: white; font-size: 18px;")
+        self.layout.addWidget(day_label)
+        
+        # Získej tasky pro tento den
+        tasks_for_day = self.get_tasks_for_date(date, all_tasks_obj)
+        
+        # Vytvoř label pro každý task
+        for task in tasks_for_day:
+            task_name = task[0]
+            task_hours = task[3]
+            
+            task_label = QLabel(f"• {task_name} ({task_hours}h)")
+            task_label.setAlignment(Qt.AlignLeft)
+            task_label.setStyleSheet("color: lightgray; font-size: 14px; padding-left: 10px;")
+            self.layout.addWidget(task_label)
+        
+        # ===== ZOBRAZENÍ NOTES PRO TENTO DEN =====
+        if self.note_obj:  # Kontrola jestli máme note_obj
+            notes_for_day = self.get_notes_for_date(date, self.note_obj)
+            
+            # Vytvoř label pro každou note
+            for note in notes_for_day:
+                note_topic = note[2]  # topic je na indexu 2
+                
+                # Note label (jiná barva - žlutá/oranžová)
+                note_label = QLabel(f"📝 {note_topic}")
+                note_label.setAlignment(Qt.AlignLeft)
+                note_label.setStyleSheet("color: #FFA500; font-size: 14px; padding-left: 10px;")
+                
+                # Ulož si note data do labelu (abychom je mohli zobrazit při kliknutí)
+                note_label.setProperty("note_data", note)
+                
+                # Povolit kliknutí na label
+                note_label.setCursor(Qt.PointingHandCursor)  # Kurzor se změní na ruku
+                note_label.mousePressEvent = lambda event, n=note: self.show_note_detail(n)
+                
+                self.layout.addWidget(note_label)
+        
+        # Prostor pod tasky a notes
+        self.layout.addStretch()
+
+        # Povol překreslování a aktualizuj
+        self.setUpdatesEnabled(True)
+        self.update()
+
+        
+    def get_tasks_for_date(self, date, all_tasks_obj):
+        """
+        Vrátí tasky pro dané datum
+        """
+        tasks_for_day = []
+        
+        for task in all_tasks_obj.list_of_all_tasks_objects:
+            task_date = task[2]
+            
+            if isinstance(task_date, datetime):
+                task_date = task_date.date()
+            
+            if task_date == date.date():
+                tasks_for_day.append(task)
+        
+        return tasks_for_day
+    
+    def get_notes_for_date(self, date, note_obj):
+        """
+        Vrátí notes pro dané datum
+        """
+        notes_for_day = []
+        
+        for note in note_obj.list_of_all_notes_objects:
+            # note[0] = date (první prvek)
+            note_date = note[0]
+            
+            if isinstance(note_date, datetime):
+                note_date = note_date.date()
+            
+            if note_date == date.date():
+                notes_for_day.append(note)
+        
+        return notes_for_day
+    
+# ===== HLAVNÍ OKNO =====
 class WeekView(QMainWindow):
     """
     Hlavní okno aplikace - zobrazuje týdenní kalendář (7 dní)
@@ -56,12 +465,22 @@ class WeekView(QMainWindow):
         
         return dates
     
+    
+        
     def update_week_display(self):
         """
         Aktualizuje zobrazení dnů a dat po změně týdne (Next/Previous)
-        TODO: Implementovat po přidání dat k dnům
         """
-        pass
+        # Získej nová data pro aktuální týden
+        week_dates = self.get_week_dates(self.current_week)
+    
+         # Aktualizuj každý DayWidget (datum + tasky)
+        for i, day_widget in enumerate(self.day_widgets):
+            date = week_dates[i]
+            day_name = self.days[i]
+        
+            # Aktualizuj obsah widgetu
+            day_widget.update_content(date, day_name, self.all_tasks, self.note)
     
     def __init__(self):
         """
@@ -71,10 +490,33 @@ class WeekView(QMainWindow):
         
         # ===== NAČTENÍ SETTINGS =====
         self.settings = Settings()
+
+        # Načti backend objekty
+        self.all_tasks = All_tasks()
+        self.goal = Goal(self.all_tasks)
+        self.note = Note() 
+
+        #debug tasks
+        print(f"DEBUG: Celkem tasků: {len(self.all_tasks.list_of_all_tasks_objects)}")
+
+        for task in self.all_tasks.list_of_all_tasks_objects:
+            print(f"DEBUG: Task: {task[0]}, Date: {task[2]}")
+
+        # DUMMY DATA - smaž později
+        dummy_task = ["Test Task", "test", datetime.now(), 2, None, []]
+        self.all_tasks.list_of_all_tasks_objects.append(dummy_task)
+        print(f"DEBUG: Přidal jsem dummy task s datem: {datetime.now().date()}")
         
-        # První přihlášení? Ulož dnešní datum jako start
+        # DEBUG: Zobraz načtené hodnoty
+        print(f"DEBUG: is_first_login = {self.settings.is_first_login()}")
+        print(f"DEBUG: start_date = {self.settings.start_date}")
+        
+        # První přihlášení? Nastav start_date
         if self.settings.is_first_login():
+            print("DEBUG: Nastavuji start_date na dnes")
             self.settings.set_start_date(datetime.now())
+        else:
+            print("DEBUG: Používám existující start_date")
             # TODO: Popup okno pro nastavení goals
         
         # Spočítej na kterém týdnu jsme (1-12)
@@ -127,36 +569,63 @@ class WeekView(QMainWindow):
 
         # Zjisti který den byl start a rotuj dny
         start_weekday = self.settings.get_start_weekday()
-        days = self.get_rotated_days(start_weekday)
+        self.days = self.get_rotated_days(start_weekday)  # Ulož jako self.days
+        days = self.days  # Použij v loopu
+
         
         # Získej datumy pro aktuální týden
         week_dates = self.get_week_dates(self.current_week)
+
+        # List pro uložení day_labels (abychom je mohli aktualizovat)
+        self.day_labels = []  
+
+        # List pro uložení day_widgets (abychom mohli aktualizovat tasky)
+        self.day_widgets = []  
         
         # Vytvoř sloupec pro každý den
-        for i, day in enumerate(days):
-            # Vertikální layout pro jeden den (věci pod sebou)
-            day_column = QVBoxLayout()
-            
-            # Formátuj datum (9.12)
+        for i, day in enumerate(days): #do i poradi od 0 a do day den z days
             date = week_dates[i]
             date_str = f"{date.day}.{date.month}"
+            
+            # Vytvoř widget pro den (místo layoutu)
+            day_widget = DayWidget(date, self, self.note)
+
+
+            # Ulož si widget pro pozdější aktualizaci
+            self.day_widgets.append(day_widget)
             
             # Label s názvem dne a datem
             day_label = QLabel(f"{day}\n{date_str}")
             day_label.setAlignment(Qt.AlignCenter)
             day_label.setStyleSheet("color: white; font-size: 18px;")
-            day_column.addWidget(day_label)
+            day_widget.layout.addWidget(day_label)
             
-            # Prostor pro tasky (zatím prázdný, později zde budou úkoly)
-            day_column.addStretch()
+            # Ulož si label pro pozdější aktualizaci
+            self.day_labels.append(day_label)
             
-            # Přidej sloupec dne do kontejneru
-            days_container.addLayout(day_column)
+            # ===== ZOBRAZENÍ TASKŮ PRO TENTO DEN =====
+            tasks_for_day = day_widget.get_tasks_for_date(date, self.all_tasks)  
             
-            # Přidej vertikální čáru mezi dny (kromě posledního)
+            # Vytvoř label pro každý task
+            for task in tasks_for_day:
+                task_name = task[0]
+                task_hours = task[3]
+                
+                task_label = QLabel(f"• {task_name} ({task_hours}h)")
+                task_label.setAlignment(Qt.AlignLeft)
+                task_label.setStyleSheet("color: lightgray; font-size: 14px; padding-left: 10px;")
+                day_widget.layout.addWidget(task_label)
+            
+            # Prostor pod tasky
+            day_widget.layout.addStretch()
+            
+            # Přidej widget do kontejneru
+            days_container.addWidget(day_widget)
+            
+            # Přidej vertikální čáru mezi dny
             if i < len(days) - 1:
                 separator = QFrame()
-                separator.setFrameShape(QFrame.VLine)  # Vertikální linka
+                separator.setFrameShape(QFrame.VLine)
                 separator.setStyleSheet("color: white;")
                 days_container.addWidget(separator)
 
@@ -169,6 +638,8 @@ class WeekView(QMainWindow):
         # Na Week 1 je Previous vypnutý (nemůžeme jít zpět)
         if self.current_week <= 1:
             self.previous_button.setEnabled(False)
+
+        self.update_week_display()
 
     def next_week(self):
         """
@@ -187,8 +658,8 @@ class WeekView(QMainWindow):
         if self.current_week >= 12:
             self.next_button.setEnabled(False)
         
-        # TODO: Aktualizuj data dnů
-        # self.update_week_display()
+        # Aktualizuj data dnů
+        self.update_week_display()
 
     def previous_week(self):
         """
@@ -207,8 +678,64 @@ class WeekView(QMainWindow):
         if self.current_week <= 1:
             self.previous_button.setEnabled(False)
         
-        # TODO: Aktualizuj data dnů
-        # self.update_week_display()
+        # Aktualizuj data dnů
+        self.update_week_display()
+    
+    def add_task_for_date(self, date):
+        """
+        Otevře popup pro přidání tasku k danému datu
+        """
+        # Vytvoř a zobraz dialog
+        dialog = AddTaskDialog(date, self)
+        
+        # Čekej na odpověď (uživatel klikne Save nebo Cancel)
+        result = dialog.exec_()
+        
+        # Pokud user klikl Save (ne Cancel)
+        if result == QDialog.Accepted:
+            # Získej data z dialogu
+            task_data = dialog.task_data
+            
+            # Ulož task do backendu
+            self.all_tasks.add_new_task(task_data)
+            
+            print(f"✅ Task uložen: {task_data[0]}")
+            
+            # Refresh GUI - aktualizuj zobrazení aktuálního týdne
+            self.update_week_display()
+
+
+    def add_note_for_date(self, date):
+        """
+        Otevře popup pro přidání note k danému datu
+        """
+        # Vytvoř a zobraz dialog
+        dialog = AddNoteDialog(date, self)
+        
+        # Čekej na odpověď
+        result = dialog.exec_()
+        
+        # Pokud user klikl Save
+        if result == QDialog.Accepted:
+            # Získej data
+            note_data = dialog.note_data
+            
+            # Ulož note do backendu
+            self.note.create_note(note_data)
+            
+            print(f"✅ Note uložena: {note_data[2]}")  # topic
+
+    def add_reward_for_date(self, date):
+        """
+        Otevře popup pro přidání reward k danému datu
+        """
+        print(f"Add Reward for {date.strftime('%d.%m.%Y')}")
+        # TODO: Otevřít popup dialog
+
+
+
+
+
 
 # ===== SPUŠTĚNÍ APLIKACE =====
 if __name__ == "__main__":
