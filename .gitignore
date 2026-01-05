@@ -1,0 +1,15 @@
+# Virtuální prostředí (tohle je ten největší balík)
+venv/
+env/
+.venv/
+
+# Python cache (zbytečné soubory)
+__pycache__/
+*.pyc
+
+# Nastavení editorů (pokud používáš VS Code nebo PyCharm)
+.idea/
+.vscode/
+
+# Pokud máš ve složce data velké soubory, které nechceš na GitHubu:
+data/
