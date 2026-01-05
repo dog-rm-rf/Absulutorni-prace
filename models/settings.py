@@ -9,7 +9,10 @@ sys.stdout.reconfigure(encoding='utf-8')
 
 class Settings:
     def __init__(self):
-        self.file_settings = "settings_dataframe.pkl"
+        # Vytvoř data složku pokud neexistuje
+        os.makedirs("data", exist_ok=True)
+        
+        self.file_settings = "data/settings_dataframe.pkl"
         self.load_settings()
     
     def load_settings(self):

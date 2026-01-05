@@ -11,8 +11,8 @@ sys.stdout.reconfigure(encoding='utf-8')
 
 class Addiction:
     def __init__(self):
-        self.file_data_frame_addiction_original = "addiction_dataframe_original.pkl"
-        self.file_data_frame_addiction_copy = "addiction_dataframe_copies.pkl"
+        self.file_data_frame_addiction_original = "data/addiction_dataframe_original.pkl"
+        self.file_data_frame_addiction_copy = "data/addiction_dataframe_copies.pkl"
         #original
         if os.path.exists(self.file_data_frame_addiction_original):
             self.data_frame_original = pd.read_pickle(self.file_data_frame_addiction_original)

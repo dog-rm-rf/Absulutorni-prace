@@ -13,7 +13,9 @@ sys.stdout.reconfigure(encoding='utf-8')
 
 class Note:
     def __init__(self):
-        self.notes_file = "notes_file.pkl"
+        # Vytvoř data složku pokud neexistuje
+        os.makedirs("data", exist_ok=True)
+        self.notes_file = "data/notes_file.pkl"
         if os.path.exists(self.notes_file):
             self.data_frame = pd.read_pickle(self.notes_file)
             self.list_of_all_notes_objects = self.data_frame.values.tolist()

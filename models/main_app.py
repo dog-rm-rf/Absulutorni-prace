@@ -1,11 +1,12 @@
 import sys
-from PyQt5.QtWidgets import QApplication, QMainWindow, QWidget, QVBoxLayout, QHBoxLayout, QLabel, QPushButton, QFrame, QMenu, QDialog, QLineEdit, QSpinBox, QFormLayout, QTextEdit
+from PyQt5.QtWidgets import QApplication, QMainWindow, QWidget, QVBoxLayout, QHBoxLayout, QLabel, QPushButton, QFrame, QMenu, QDialog, QLineEdit, QSpinBox, QFormLayout, QTextEdit, QScrollArea
 from datetime import datetime, timedelta
 from PyQt5.QtCore import Qt
 from settings import Settings 
 from all_tasks import All_tasks  
 from goal import Goal 
 from notes_class import Note
+from reward import Reward 
 
 # ===== DIALOG PRO PŘIDÁNÍ TASKU =====
 class AddTaskDialog(QDialog):
@@ -176,7 +177,7 @@ class AddNoteDialog(QDialog):
         
         save_button = QPushButton("Save")
         save_button.clicked.connect(self.save_note)
-        save_button.setStyleSheet("background-color: #4CAF50; color: white;")
+        save_button.setStyleSheet("background-color: white; color: black;")
         
         buttons_layout.addWidget(cancel_button)
         buttons_layout.addWidget(save_button)
@@ -214,6 +215,106 @@ class AddNoteDialog(QDialog):
         
         # Zavři dialog
         self.accept()
+        
+# ===== DIALOG PRO PŘIDÁNÍ REWARD =====
+class AddRewardDialog(QDialog):
+    """
+    Popup dialog pro přidání odměny
+    """
+    def __init__(self, date, parent=None):
+        super().__init__(parent)
+        self.date = date
+        self.reward_data = None
+        
+        # Nastavení okna
+        self.setWindowTitle("Add Reward")
+        self.setModal(True)
+        self.setFixedSize(400, 250)
+        
+        # Layout
+        layout = QVBoxLayout()
+        
+        # Formulář
+        form_layout = QFormLayout()
+        
+        # Datum (read-only)
+        date_label = QLabel(date.strftime("%d.%m.%Y"))
+        date_label.setStyleSheet("color: gray;")
+        form_layout.addRow("Date:", date_label)
+        
+        # Reward Name
+        self.reward_name_input = QLineEdit()
+        self.reward_name_input.setPlaceholderText("e.g. Watch movie, Play games")
+        form_layout.addRow("Reward:", self.reward_name_input)
+        
+        # Time - Hours and Minutes
+        time_layout = QHBoxLayout()
+        
+        self.hours_input = QSpinBox()
+        self.hours_input.setMinimum(0)
+        self.hours_input.setMaximum(24)
+        self.hours_input.setValue(1)
+        self.hours_input.setSuffix(" h")
+        
+        self.minutes_input = QSpinBox()
+        self.minutes_input.setMinimum(0)
+        self.minutes_input.setMaximum(59)
+        self.minutes_input.setSingleStep(15)
+        self.minutes_input.setValue(0)
+        self.minutes_input.setSuffix(" min")
+        
+        time_layout.addWidget(self.hours_input)
+        time_layout.addWidget(self.minutes_input)
+        
+        form_layout.addRow("Time:", time_layout)
+        
+        layout.addLayout(form_layout)
+        
+        # Buttons
+        buttons_layout = QHBoxLayout()
+        
+        cancel_button = QPushButton("Cancel")
+        cancel_button.clicked.connect(self.reject)
+        
+        save_button = QPushButton("Save")
+        save_button.clicked.connect(self.save_reward)
+        save_button.setStyleSheet("background-color: white; color: black;")
+        
+        buttons_layout.addWidget(cancel_button)
+        buttons_layout.addWidget(save_button)
+        
+        layout.addLayout(buttons_layout)
+        
+        self.setLayout(layout)
+    
+    def save_reward(self):
+        """
+        Uloží reward data
+        """
+        # Získej hodnoty
+        reward_name = self.reward_name_input.text().strip()
+        hours = self.hours_input.value()
+        minutes = self.minutes_input.value()
+        
+        # Validace
+        if not reward_name:
+            print("ERROR: Reward name is required!")
+            return
+        
+        # Převeď na desetinné číslo
+        total_hours = hours + (minutes / 60.0)
+        
+        # Ulož data (v formátu pro reward.add_reward)
+        # [date_of_creation, reward_name, time, finished]
+        self.reward_data = [
+            self.date,
+            reward_name,
+            total_hours,
+            False  # finished = False (ještě nesplněno)
+        ]
+        
+        # Zavři dialog
+        self.accept()
 
 # ===== TŘÍDA PRO JEDEN DEN =====
 class DayWidget(QWidget):
@@ -221,12 +322,15 @@ class DayWidget(QWidget):
     Widget pro jeden den - umožňuje context menu (pravé tlačítko)
     """
     #widget je top-level (např. samostatné okno) a musí být spravován ručně reference na parent=None
-    def __init__(self, date, parent=None, note_obj=None): #tohle jsou parametry, potrebujeme date, a parent je volitelny
+    def __init__(self, date, parent=None, note_obj=None, reward_obj=None): #tohle jsou parametry, potrebujeme date, a parent je volitelny
         super().__init__(parent) # kdyz neuvedeme parent tak parent je QWidget
         self.date = date  # Uložíme si datum tohoto dne
         self.parent_window = parent  # Odkaz na hlavní okno
         self.note_obj = note_obj
-
+        self.reward_obj = reward_obj 
+        
+        # Nastav maximální šířku sloupce
+        self.setMaximumWidth(200)
 
         # Layout pro tento den
         self.layout = QVBoxLayout()
@@ -303,7 +407,7 @@ class DayWidget(QWidget):
             self.parent_window.add_reward_for_date(self.date)
 
 
-    def update_content(self, date, day_name, all_tasks_obj, note_obj=None):
+    def update_content(self, date, day_name, all_tasks_obj, note_obj=None, reward_obj=None):
         """
         Aktualizuje obsah widgetu (datum + tasky) pro nový týden
         
@@ -313,6 +417,7 @@ class DayWidget(QWidget):
             all_tasks_obj: Odkaz na All_tasks objekt
         """
         self.note_obj = note_obj 
+        self.reward_obj = reward_obj
         # Zakaž překreslování během aktualizace
         self.setUpdatesEnabled(False)
 
@@ -342,9 +447,14 @@ class DayWidget(QWidget):
             task_name = task[0]
             task_hours = task[3]
             
-            task_label = QLabel(f"• {task_name} ({task_hours}h)")
+            # Zkrať název pokud je moc dlouhý
+            max_length = 18    
+            display_name = task_name if len(task_name) <= max_length else task_name[:max_length] + "..."
+            
+            task_label = QLabel(f"• {display_name}\n ({task_hours}h)")
             task_label.setAlignment(Qt.AlignLeft)
             task_label.setStyleSheet("color: lightgray; font-size: 14px; padding-left: 10px;")
+            task_label.setToolTip(task_name)
             self.layout.addWidget(task_label)
         
         # ===== ZOBRAZENÍ NOTES PRO TENTO DEN =====
@@ -355,10 +465,15 @@ class DayWidget(QWidget):
             for note in notes_for_day:
                 note_topic = note[2]  # topic je na indexu 2
                 
+                # Zkrať topic pokud je moc dlouhý
+                max_length = 18
+                display_topic = note_topic if len(note_topic) <= max_length else note_topic[:max_length] + "..."
+                
                 # Note label (jiná barva - žlutá/oranžová)
-                note_label = QLabel(f"📝 {note_topic}")
+                note_label = QLabel(f"📝 {display_topic}")
                 note_label.setAlignment(Qt.AlignLeft)
                 note_label.setStyleSheet("color: #FFA500; font-size: 14px; padding-left: 10px;")
+                note_label.setToolTip(note_topic)
                 
                 # Ulož si note data do labelu (abychom je mohli zobrazit při kliknutí)
                 note_label.setProperty("note_data", note)
@@ -368,6 +483,31 @@ class DayWidget(QWidget):
                 note_label.mousePressEvent = lambda event, n=note: self.show_note_detail(n)
                 
                 self.layout.addWidget(note_label)
+            
+        # ===== ZOBRAZENÍ REWARDS PRO TENTO DEN =====
+        if self.reward_obj:
+            rewards_for_day = self.get_rewards_for_date(date, self.reward_obj)
+        
+            # Vytvoř label pro každou reward
+            for reward in rewards_for_day:
+                reward_name = reward[1]  # reward_name je na indexu 1
+                reward_time = reward[2]  # time
+                reward_finished = reward[3]  # finished
+                
+                # Ikona podle toho jestli je splněno
+                icon = "✅" if reward_finished else "🎁"
+                
+                # Zkrať název pokud je moc dlouhý
+                max_length = 18  # O trochu kratší kvůli ikoně
+                display_reward = reward_name if len(reward_name) <= max_length else reward_name[:max_length] + "..."
+                
+                # Reward label (zelená barva)
+                reward_label = QLabel(f"{icon} {display_reward}\n ({reward_time}h)")
+                reward_label.setAlignment(Qt.AlignLeft)
+                reward_label.setStyleSheet("color: #00FF00; font-size: 14px; padding-left: 10px;")
+                reward_label.setToolTip(reward_name)
+                
+                self.layout.addWidget(reward_label)
         
         # Prostor pod tasky a notes
         self.layout.addStretch()
@@ -411,6 +551,24 @@ class DayWidget(QWidget):
                 notes_for_day.append(note)
         
         return notes_for_day
+    
+    def get_rewards_for_date(self, date, reward_obj):
+        """
+        Vrátí rewards pro dané datum
+        """
+        rewards_for_day = []
+        
+        for reward in reward_obj.list_of_all_reward_objects:
+            # reward[0] = date_of_creation
+            reward_date = reward[0]
+            
+            if isinstance(reward_date, datetime):
+                reward_date = reward_date.date()
+            
+            if reward_date == date.date():
+                rewards_for_day.append(reward)
+        
+        return rewards_for_day
     
 # ===== HLAVNÍ OKNO =====
 class WeekView(QMainWindow):
@@ -480,7 +638,7 @@ class WeekView(QMainWindow):
             day_name = self.days[i]
         
             # Aktualizuj obsah widgetu
-            day_widget.update_content(date, day_name, self.all_tasks, self.note)
+            day_widget.update_content(date, day_name, self.all_tasks, self.note, self.reward)
     
     def __init__(self):
         """
@@ -495,6 +653,7 @@ class WeekView(QMainWindow):
         self.all_tasks = All_tasks()
         self.goal = Goal(self.all_tasks)
         self.note = Note() 
+        self.reward = Reward()
 
         #debug tasks
         print(f"DEBUG: Celkem tasků: {len(self.all_tasks.list_of_all_tasks_objects)}")
@@ -588,7 +747,7 @@ class WeekView(QMainWindow):
             date_str = f"{date.day}.{date.month}"
             
             # Vytvoř widget pro den (místo layoutu)
-            day_widget = DayWidget(date, self, self.note)
+            day_widget = DayWidget(date, self, self.note, self.reward)
 
 
             # Ulož si widget pro pozdější aktualizaci
@@ -629,8 +788,20 @@ class WeekView(QMainWindow):
                 separator.setStyleSheet("color: white;")
                 days_container.addWidget(separator)
 
-        # Přidej kontejner dnů do main_layout
-        main_layout.addLayout(days_container)
+            # ===== SCROLL AREA =====
+        # Vytvoř widget pro days_container
+        days_widget = QWidget()
+        days_widget.setLayout(days_container)
+        
+        # Vytvoř scroll area
+        scroll_area = QScrollArea()
+        scroll_area.setWidget(days_widget)
+        scroll_area.setWidgetResizable(True)  # Důležité - widget se přizpůsobí
+        scroll_area.setHorizontalScrollBarPolicy(Qt.ScrollBarAlwaysOff)  # Jen vertikální scroll
+        scroll_area.setStyleSheet("QScrollArea { border: none; background-color: black; }")
+        
+        # Přidej scroll area do main_layout (místo days_container)
+        main_layout.addWidget(scroll_area)
 
         # ===== FINALIZACE =====
         central_widget.setLayout(main_layout)
@@ -729,8 +900,24 @@ class WeekView(QMainWindow):
         """
         Otevře popup pro přidání reward k danému datu
         """
-        print(f"Add Reward for {date.strftime('%d.%m.%Y')}")
-        # TODO: Otevřít popup dialog
+        # Vytvoř a zobraz dialog
+        dialog = AddRewardDialog(date, self)
+        
+        # Čekej na odpověď
+        result = dialog.exec_()
+        
+        # Pokud user klikl Save
+        if result == QDialog.Accepted:
+            # Získej data
+            reward_data = dialog.reward_data
+            
+            # Ulož reward do backendu
+            self.reward.add_reward(reward_data)
+            
+            print(f"✅ Reward uložena: {reward_data[1]}")
+            
+            # Refresh GUI
+            self.update_week_display()
 
 
 

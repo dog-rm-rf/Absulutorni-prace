@@ -12,8 +12,10 @@ sys.stdout.reconfigure(encoding='utf-8')
 
 class Goal:
     def __init__(self, allTask):
+        # Vytvoř data složku pokud neexistuje
+        os.makedirs("data", exist_ok=True)
         self.allTask = allTask
-        self.file_data_frame_goal = "goals_dataframe.pkl"
+        self.file_data_frame_goal = "data/goals_dataframe.pkl"
         if os.path.exists(self.file_data_frame_goal):
             self.data_frame = pd.read_pickle(self.file_data_frame_goal)
             self.list_of_all_goals_objects = self.data_frame.values.tolist()
@@ -26,7 +28,17 @@ class Goal:
         self.update_df_goals()
         
     def update_df_goals(self):
-        self.data_frame = pd.DataFrame(self.list_of_all_goals_objects, columns=["goal_name", "subclass", "timer", "avrage_score", "date_of_creation"])
+        self.data_frame = pd.DataFrame(self.list_of_all_goals_objects, columns=[
+        "goal_name",        # 0
+        "subclass",         # 1
+        "timer",            # 2 - kolik hodin chceš strávit
+        "average_score",    # 3 - jaké průměrné score chceš
+        "date_of_creation", # 4 - začátek cyklu (start_date)
+        "checked",          # 5 - splněno/nesplněno (bool)
+        "end_date",         # 6 - konec cyklu
+        "completed"         # 7 - cyklus dokončen (bool)
+    ]
+        )
         self.data_frame.to_pickle(self.file_data_frame_goal)
     
     def upadating_timer(self, index1, value):

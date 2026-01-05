@@ -13,7 +13,9 @@ sys.stdout.reconfigure(encoding='utf-8')
 class All_tasks:
     #
     def __init__(self):
-        self.file_data_frame_task = "tasks_dataframe.pkl"
+        # Vytvoř data složku pokud neexistuje
+        os.makedirs("data", exist_ok=True)
+        self.file_data_frame_task = "data/tasks_dataframe.pkl"
         if os.path.exists(self.file_data_frame_task):
             self.data_frame = pd.read_pickle(self.file_data_frame_task)
             self.list_of_all_tasks_objects = self.data_frame.values.tolist()
