@@ -110,7 +110,7 @@ class WeekView(QMainWindow):
         self.reward = Reward()
 
         #debug tasks
-        print(f"DEBUG: Celkem tasků: {len(self.all_tasks.list_of_all_tasks_objects)}")
+        #print(f"DEBUG: Celkem tasků: {len(self.all_tasks.list_of_all_tasks_objects)}")
 
         for task in self.all_tasks.list_of_all_tasks_objects:
             print(f"DEBUG: Task: {task[0]}, Date: {task[2]}")
