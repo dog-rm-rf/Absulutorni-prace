@@ -15,7 +15,7 @@ class Reward:
         os.makedirs("data", exist_ok=True)
         self.file_data_frame_reward = "data/reward_dataframe.pkl"
         if os.path.exists(self.file_data_frame_reward):
-            self.data_frame = pd.read_pickle(self.file_data_frame_reward)
+            self.reward_dataframe = "data/active/reward_dataframe.pkl"  # ← ZMĚNA
             self.list_of_all_reward_objects = self.data_frame.values.tolist()
         else:
             self.data_frame = pd.DataFrame()

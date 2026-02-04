@@ -17,7 +17,7 @@ class Note:
         os.makedirs("data", exist_ok=True)
         self.notes_file = "data/notes_file.pkl"
         if os.path.exists(self.notes_file):
-            self.data_frame = pd.read_pickle(self.notes_file)
+            self.notes_file = "data/active/notes_file.pkl"  # ← ZMĚNA
             self.list_of_all_notes_objects = self.data_frame.values.tolist()
         else:
             self.data_frame = pd.DataFrame()

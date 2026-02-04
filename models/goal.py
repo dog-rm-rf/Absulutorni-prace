@@ -17,7 +17,7 @@ class Goal:
         self.allTask = allTask
         self.file_data_frame_goal = "data/goals_dataframe.pkl"
         if os.path.exists(self.file_data_frame_goal):
-            self.data_frame = pd.read_pickle(self.file_data_frame_goal)
+            self.goals_dataframe = "data/active/goals_dataframe.pkl"  # ← ZMĚNA
             self.list_of_all_goals_objects = self.data_frame.values.tolist()
         else:
             self.data_frame = pd.DataFrame()

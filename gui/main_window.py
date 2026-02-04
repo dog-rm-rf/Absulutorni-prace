@@ -16,6 +16,7 @@ from models.all_tasks import All_tasks
 from models.goal import Goal
 from models.notes_class import Note
 from models.reward import Reward
+from models.cycles_manager import CyclesManager  # ← PŘIDEJ
 
 
 # ===== HLAVNÍ OKNO =====
@@ -93,23 +94,27 @@ class WeekView(QMainWindow):
         Inicializace hlavního okna - nastavení GUI, načtení settings, zobrazení týdne
         """
         super().__init__()
+    
+        # ===== NAČTENÍ CYCLES MANAGER =====
+        self.cycles_manager = CyclesManager()
+        
+        # Zkontroluj a sprav cykly
+        self.handle_cycles()
         
         # ===== NAČTENÍ SETTINGS =====
         self.settings = Settings()
-        
-        
-        # DEBUG
-        print(f"DEBUG: Načtený start_date: {self.settings.start_date}")
-        print(f"DEBUG: is_first_login(): {self.settings.is_first_login()}")
-        print(f"DEBUG: needs_new_cycle(): {self.settings.needs_new_cycle()}")
 
         # Načti backend objekty
         self.all_tasks = All_tasks()
         self.goal = Goal(self.all_tasks)
-        self.note = Note() 
+        self.note = Note()
         self.reward = Reward()
 
         #debug tasks
+        # DEBUG
+        print(f"DEBUG: Načtený start_date: {self.settings.start_date}")
+        print(f"DEBUG: is_first_login(): {self.settings.is_first_login()}")
+        print(f"DEBUG: needs_new_cycle(): {self.settings.needs_new_cycle()}")
         #print(f"DEBUG: Celkem tasků: {len(self.all_tasks.list_of_all_tasks_objects)}")
 
         for task in self.all_tasks.list_of_all_tasks_objects:
@@ -124,25 +129,11 @@ class WeekView(QMainWindow):
         print(f"DEBUG: is_first_login = {self.settings.is_first_login()}")
         print(f"DEBUG: start_date = {self.settings.start_date}")
         
-        # První přihlášení? Nastav start_date
-        if self.settings.is_first_login():
-            print("DEBUG: Nastavuji start_date na dnes")
-            self.settings.set_start_date(datetime.now())
-            self.show_goals_dialog()  # ← Zobraz goals popup
-            
-        # Nebo uplynulo 12 týdnů? Nový cyklus = nové goals
-        elif self.settings.needs_new_cycle():
-            # Reset start_date na dnes
-            self.settings.set_start_date(datetime.now())
-            self.show_goals_dialog()  # ← Zobraz goals popup
-            
-            # Smaž staré goals (začínáme nový cyklus)
-            self.goal.list_of_all_goals_objects = []
-            self.goal.update_data_frame()
+       
             
         
         # Spočítej na kterém týdnu jsme (1-12)
-        self.current_week = self.settings.calculate_current_week()
+        self.current_week = self.calculate_current_week()
         
         # ===== NASTAVENÍ HLAVNÍHO OKNA =====
         self.setWindowTitle("12 Week Planner")
@@ -291,6 +282,114 @@ class WeekView(QMainWindow):
         else:
             print("DEBUG: Goals už existují, popup se nezobrazí")
             print(self.goal.list_of_all_goals_objects)
+
+    def calculate_current_week(self):
+        """
+        Spočítá aktuální týden v cyklu (1-12)
+        
+        Returns:
+            int: Číslo týdne (1-12)
+        """
+        active_cycle = self.cycles_manager.get_active_cycle()
+        
+        if not active_cycle:
+            return 1  # Default
+        
+        start_date = active_cycle['start_date']
+        today = datetime.now()
+        
+        days_since_start = (today - start_date).days
+        
+        # Spočítej týden (1-12)
+        week = (days_since_start // 7) + 1
+        
+        # Omez na 1-12
+        if week < 1:
+            week = 1
+        if week > 12:
+            week = 12
+        
+        return week
+
+    def handle_cycles(self):
+        """
+        Správa cyklů při startu aplikace
+        
+        Logika:
+        1. Zkontroluj jestli existuje aktivní cyklus
+        2. Pokud ne → vytvoř nový
+        3. Pokud ano → zkontroluj jestli už neuplynulo 12 týdnů
+        4. Pokud uplynulo → archivuj a vytvoř nový
+        """
+        print("\n" + "="*50)
+        print("🔄 CYCLES MANAGER - Kontrola cyklů")
+        print("="*50)
+        
+        # 1. Potřebujeme nový cyklus?
+        if self.cycles_manager.needs_new_cycle():
+            print("⚠️ Potřeba nový cyklus")
+            
+            # Zjisti jestli existuje nějaký aktivní (k archivaci)
+            active = self.cycles_manager.get_active_cycle()
+            
+            if active:
+                print(f"📦 Archivuji cyklus #{active['id']}...")
+                
+                # Zeptej se uživatele
+                from PyQt5.QtWidgets import QMessageBox
+                reply = QMessageBox.question(
+                    None,
+                    "New Cycle",
+                    f"12 weeks have passed since {active['start_date'].date()}.\n\n"
+                    "Archive current cycle and start a new one?\n\n"
+                    "Your data will be saved to archive.",
+                    QMessageBox.Yes | QMessageBox.No,
+                    QMessageBox.Yes
+                )
+                
+                if reply == QMessageBox.Yes:
+                    # Archivuj
+                    success = self.cycles_manager.archive_current_cycle()
+                    
+                    if success:
+                        print("✅ Archivace dokončena")
+                        
+                        # Vytvoř nový cyklus
+                        new_cycle = self.cycles_manager.create_new_cycle()
+                        print(f"✅ Nový cyklus #{new_cycle['id']} vytvořen")
+                        
+                        # Info okno
+                        QMessageBox.information(
+                            None,
+                            "New Cycle Started",
+                            f"Cycle #{new_cycle['id']} started!\n\n"
+                            f"Duration: {new_cycle['start_date'].date()} - {new_cycle['end_date'].date()}\n\n"
+                            "Set your goals for the next 12 weeks!"
+                        )
+                    else:
+                        print("❌ Archivace selhala")
+                else:
+                    print("⏸️ Uživatel odmítl archivaci - ponecháváme starý cyklus")
+            
+            else:
+                # Žádný aktivní cyklus - první spuštění
+                print("🆕 První spuštění - vytváření prvního cyklu")
+                new_cycle = self.cycles_manager.create_new_cycle()
+                print(f"✅ Cyklus #{new_cycle['id']} vytvořen")
+        
+        else:
+            # Všechno OK - cyklus běží
+            active = self.cycles_manager.get_active_cycle()
+            print(f"✅ Aktivní cyklus #{active['id']}")
+            print(f"   Start: {active['start_date'].date()}")
+            print(f"   End: {active['end_date'].date()}")
+            
+            # Kolik dní zbývá?
+            from datetime import datetime
+            days_left = (active['end_date'] - datetime.now()).days
+            print(f"   Zbývá: {days_left} dní")
+        
+        print("="*50 + "\n")    
             
     def open_management_dialog(self):
         """
@@ -421,9 +520,15 @@ class WeekView(QMainWindow):
         if result == QDialog.Accepted:
             goals = dialog.goals_data
             
-            # Vypočítej start a end date pro tento cyklus
-            cycle_start = self.settings.start_date
-            cycle_end = cycle_start + timedelta(days=84)  # 12 týdnů = 84 dní
+            # Získej cycle dates z CyclesManager
+            active_cycle = self.cycles_manager.get_active_cycle()
+            
+            if not active_cycle:
+                print("❌ Žádný aktivní cyklus!")
+                return
+            
+            cycle_start = active_cycle['start_date']  # ← NOVÁ VERZE
+            cycle_end = active_cycle['end_date']
             
             # Ulož každý goal do backendu
             for goal_list in goals:
@@ -473,27 +578,35 @@ class WeekView(QMainWindow):
         """
         Vrátí goals pro aktuální cyklus
         """
-        current_start = self.settings.start_date
+        # Získej start_date z aktivního cyklu
+        active_cycle = self.cycles_manager.get_active_cycle()
+        
+        if not active_cycle:
+            return []  # Žádný aktivní cyklus
+        
+        current_start = active_cycle['start_date']  # ← NOVÁ VERZE (z cycles_manager)
         
         # Filtruj goals podle start_date
         current_goals = []
-        for goal in self.goal.list_of_all_goals_objects:
+        for goal in self.goal.list_of_all_goal_objects:
             # Starý formát - přeskoč
             if len(goal) < 8:
-                # Rozšířený formát: date_of_creation je na indexu 4
-                goal_start_date = goal[4]
-                
-                # Porovnej start_date (jen datum, ne čas)
-                if isinstance(goal_start_date, datetime):
-                    goal_start_date = goal_start_date.date()
-                
-                if isinstance(current_start, datetime):
-                    current_start_date = current_start.date()
-                else:
-                    current_start_date = current_start
-                
-                # Je tento goal z aktuálního cyklu?
-                if goal_start_date == current_start_date:
-                    current_goals.append(goal)
+                continue
+            
+            # Rozšířený formát: date_of_creation je na indexu 4
+            goal_start_date = goal[4]
+            
+            # Porovnej start_date (jen datum, ne čas)
+            if isinstance(goal_start_date, datetime):
+                goal_start_date = goal_start_date.date()
+            
+            if isinstance(current_start, datetime):
+                current_start_date = current_start.date()
+            else:
+                current_start_date = current_start
+            
+            # Je tento goal z aktuálního cyklu?
+            if goal_start_date == current_start_date:
+                current_goals.append(goal)
         
         return current_goals

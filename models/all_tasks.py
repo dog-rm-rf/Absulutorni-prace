@@ -17,7 +17,7 @@ class All_tasks:
         os.makedirs("data", exist_ok=True)
         self.file_data_frame_task = "data/tasks_dataframe.pkl"
         if os.path.exists(self.file_data_frame_task):
-            self.data_frame = pd.read_pickle(self.file_data_frame_task)
+            self.file_data_frame_task = "data/active/tasks_dataframe.pkl"  # ← ZMĚNA
             self.list_of_all_tasks_objects = self.data_frame.values.tolist()
         else:
             self.data_frame = pd.DataFrame()
