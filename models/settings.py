@@ -33,15 +33,6 @@ class Settings:
             self.goals_set = False
             self.settings_list = []
     
-    def is_first_login(self):
-        """Kontrola jestli je první přihlášení"""
-        return self.start_date is None
-    
-    def set_start_date(self, date):
-        """Nastaví start datum (první přihlášení)"""
-        self.start_date = date
-        self.save_settings()
-    
     def set_goals_completed(self, value=True):
         """Označí že goals byly nastaveny"""
         self.goals_set = value
@@ -54,34 +45,4 @@ class Settings:
         self.data_frame = pd.DataFrame(self.settings_list, columns=['start_date', 'goals_set'])
         self.data_frame.to_pickle(self.file_settings)
     
-    def calculate_current_week(self):
-        """Spočítá aktuální týden od start_date"""
-        if self.start_date is None:
-            return 1
-        
-        today = datetime.now()
-        days_since_start = (today - self.start_date).days
-        week = (days_since_start // 7) + 1
-        
-        # Omezení na 1-12
-        if week < 1:
-            week = 1
-        elif week > 12:
-            week = 12
-        
-        return week
     
-    def needs_new_cycle(self):
-        """Kontrola jestli uplynulo 12 týdnů (potřeba nový cyklus)"""
-        if self.start_date is None:
-            return False
-        
-        today = datetime.now()
-        days_since_start = (today - self.start_date).days
-        return days_since_start >= (12 * 7)  # 84 dní
-    
-    def get_start_weekday(self):
-        """Vrátí den v týdnu kdy začal cyklus (0=Mon, 6=Sun)"""
-        if self.start_date is None:
-            return 0  # Default Monday
-        return self.start_date.weekday()

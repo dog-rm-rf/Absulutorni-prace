@@ -52,17 +52,23 @@ class WeekView(QMainWindow):
             week_number (int): Číslo týdne (1-12)
             
         Returns:
-            list: List 7 datetime objektů (pondělí až neděle toho týdne)
-        
-        Příklad:
-            Week 1, start_date = středa 11.12.2024
-            → vrátí [středa 11.12, čtvrtek 12.12, ..., úterý 17.12]
+            list: List 7 datetime objektů
         """
+        # Získej start_date z aktivního cyklu
+        active_cycle = self.cycles_manager.get_active_cycle()
+        
+        if not active_cycle:
+            # Žádný aktivní cyklus - použij dnešek jako fallback
+            from datetime import datetime
+            start_date = datetime.now()
+        else:
+            start_date = active_cycle['start_date']
+        
         # Kolik dní od start_date je začátek tohoto týdne?
         days_offset = (week_number - 1) * 7
         
         # První den tohoto týdne
-        week_start = self.settings.start_date + timedelta(days=days_offset)
+        week_start = start_date + timedelta(days=days_offset)
         
         # Vytvoř list 7 po sobě jdoucích dat
         dates = []
@@ -71,7 +77,6 @@ class WeekView(QMainWindow):
             dates.append(date)
         
         return dates
-    
     
         
     def update_week_display(self):
@@ -110,27 +115,6 @@ class WeekView(QMainWindow):
         self.note = Note()
         self.reward = Reward()
 
-        #debug tasks
-        # DEBUG
-        print(f"DEBUG: Načtený start_date: {self.settings.start_date}")
-        print(f"DEBUG: is_first_login(): {self.settings.is_first_login()}")
-        print(f"DEBUG: needs_new_cycle(): {self.settings.needs_new_cycle()}")
-        #print(f"DEBUG: Celkem tasků: {len(self.all_tasks.list_of_all_tasks_objects)}")
-
-        for task in self.all_tasks.list_of_all_tasks_objects:
-            print(f"DEBUG: Task: {task[0]}, Date: {task[2]}")
-
-        # DUMMY DATA - smaž později
-        dummy_task = ["Test Task", "test", datetime.now(), 2, None, []]
-        self.all_tasks.list_of_all_tasks_objects.append(dummy_task)
-        print(f"DEBUG: Přidal jsem dummy task s datem: {datetime.now().date()}")
-        
-        # DEBUG: Zobraz načtené hodnoty
-        print(f"DEBUG: is_first_login = {self.settings.is_first_login()}")
-        print(f"DEBUG: start_date = {self.settings.start_date}")
-        
-       
-            
         
         # Spočítej na kterém týdnu jsme (1-12)
         self.current_week = self.calculate_current_week()
@@ -187,7 +171,11 @@ class WeekView(QMainWindow):
         days_container = QHBoxLayout()
 
         # Zjisti který den byl start a rotuj dny
-        start_weekday = self.settings.get_start_weekday()
+        active_cycle = self.cycles_manager.get_active_cycle()
+        if active_cycle:
+            start_weekday = active_cycle['start_date'].weekday()
+        else:
+            start_weekday = 0  # Monday default
         self.days = self.get_rotated_days(start_weekday)  # Ulož jako self.days
         days = self.days  # Použij v loopu
 
@@ -272,16 +260,6 @@ class WeekView(QMainWindow):
 
         self.update_week_display()
         
-        # ===== ZKONTROLUJ GOALS =====
-        print(f"DEBUG: has_active_goals() = {self.has_active_goals()}")
-        print(f"DEBUG: počet goals = {len(self.goal.list_of_all_goals_objects)}")
-        if not self.has_active_goals():
-            # Zobraz popup až po 100ms (až se okno zobrazí)
-            print("DEBUG: Volám show_goals_dialog()")
-            QTimer.singleShot(100, self.show_goals_dialog)
-        else:
-            print("DEBUG: Goals už existují, popup se nezobrazí")
-            print(self.goal.list_of_all_goals_objects)
 
     def calculate_current_week(self):
         """
