@@ -25,6 +25,20 @@ class Reward:
             self.data_frame = pd.read_pickle(self.reward_dataframe)
             self.list_of_all_reward_objects = self.data_frame.values.tolist()
             print(f"✅ Načteno {len(self.list_of_all_reward_objects)} rewards")
+
+            # ===== MIGRACE - PŘIDEJ actual_time KE STARÝM REWARDS =====
+            migrated = False
+            for reward in self.list_of_all_reward_objects:
+                if len(reward) == 4:  # Starý formát
+                    # Přidej actual_time = plánovaný čas (default)
+                    reward.append(reward[2])  # actual_time = time
+                    migrated = True
+            
+            if migrated:
+                print(f"🔄 Migrace {len(self.list_of_all_reward_objects)} rewards - přidán sloupec actual_time")
+                self.update_data_frame()  # Ulož migrovaná data
+            # ===== KONEC MIGRACE =====
+
         else:
             # Soubor neexistuje - vytvoř prázdný DataFrame
             print("⚠️ Rewards soubor neexistuje - vytváření prázdného")

@@ -96,7 +96,8 @@ class AddRewardDialog(QDialog):
             self.date,
             reward_name,
             total_hours,
-            False  # finished = False (ještě nesplněno)
+            False, # finished = False (ještě nesplněno)
+            total_hours,
         ]
         
         # Zavři dialog
