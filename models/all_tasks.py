@@ -13,19 +13,33 @@ sys.stdout.reconfigure(encoding='utf-8')
 class All_tasks:
     #
     def __init__(self):
-        # Vytvoř data složku pokud neexistuje
-        os.makedirs("data", exist_ok=True)
-        self.file_data_frame_task = "data/tasks_dataframe.pkl"
+        """
+        Inicializace All_tasks - načte tasky ze souboru
+        """
+        # Nastavení cesty
+        self.file_data_frame_task = "data/active/tasks_dataframe.pkl"
+        
+        # Vytvoř složku pokud neexistuje
+        os.makedirs("data/active", exist_ok=True)
+        
+        # Načti data ze souboru
         if os.path.exists(self.file_data_frame_task):
-            self.file_data_frame_task = "data/active/tasks_dataframe.pkl"  # ← ZMĚNA
+            # Soubor existuje - načti ho
+            self.data_frame = pd.read_pickle(self.file_data_frame_task)
             self.list_of_all_tasks_objects = self.data_frame.values.tolist()
+            print(f"✅ Načteno {len(self.list_of_all_tasks_objects)} tasků")
         else:
-            self.data_frame = pd.DataFrame()
+            # Soubor neexistuje - vytvoř prázdný DataFrame
+            print("⚠️ Tasks soubor neexistuje - vytváření prázdného")
+            self.data_frame = pd.DataFrame(columns=["name", "subclass", "date", "hours", "score", "review"])
             self.list_of_all_tasks_objects = []
-
+            
+            # Ulož prázdný soubor
+            self.update_data_frame()
+            
     def add_new_task(self, task):
-        self.list_of_all_tasks_objects.append(task)
-        self.update_data_frame()
+            self.list_of_all_tasks_objects.append(task)
+            self.update_data_frame()
     
     def setting_task(self, index, score, learnt, dont_understand, next_step):
         self.list_of_all_tasks_objects[index][4] = score

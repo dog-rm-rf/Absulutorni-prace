@@ -133,7 +133,7 @@ class ManagementDialog(QDialog):
         
         if reply == QMessageBox.Yes:
             # Smaž z listu
-            self.goal.list_of_all_goal_objects.remove(goal)
+            self.goal.list_of_all_goals_objects.remove(goal)
             self.goal.update_data_frame()
             self.refresh_goals_list()
             print(f"✅ Goal deleted: {goal[0]}")

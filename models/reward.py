@@ -1,7 +1,5 @@
 # -*- coding: utf-8 -*-
-import sqlite3
 import sys
-import io
 import os
 from datetime import datetime 
 import pandas as pd
@@ -9,24 +7,49 @@ import pandas as pd
 # Fix Windows console encoding for Czech characters
 sys.stdout.reconfigure(encoding='utf-8')
 
+
 class Reward:
     def __init__(self):
-        # Vytvoř data složku pokud neexistuje
-        os.makedirs("data", exist_ok=True)
-        self.file_data_frame_reward = "data/reward_dataframe.pkl"
-        if os.path.exists(self.file_data_frame_reward):
-            self.reward_dataframe = "data/active/reward_dataframe.pkl"  # ← ZMĚNA
+        """
+        Inicializace Reward - načte rewards ze souboru
+        """
+        # Nastavení cesty
+        self.reward_dataframe = "data/active/reward_dataframe.pkl"
+        
+        # Vytvoř složku pokud neexistuje
+        os.makedirs("data/active", exist_ok=True)
+        
+        # Načti data ze souboru
+        if os.path.exists(self.reward_dataframe):
+            # Soubor existuje - načti ho
+            self.data_frame = pd.read_pickle(self.reward_dataframe)
             self.list_of_all_reward_objects = self.data_frame.values.tolist()
+            print(f"✅ Načteno {len(self.list_of_all_reward_objects)} rewards")
         else:
-            self.data_frame = pd.DataFrame()
+            # Soubor neexistuje - vytvoř prázdný DataFrame
+            print("⚠️ Rewards soubor neexistuje - vytváření prázdného")
+            self.data_frame = pd.DataFrame(columns=["date", "name", "time", "finished", "actual_time"])
             self.list_of_all_reward_objects = []
             
+            # Ulož prázdný soubor
+            self.update_data_frame()
+    
     def add_reward(self, reward):
-        self.list_of_all_reward_objects.append(reward)
-        self.update_df_rewards()
+        """
+        Přidá novou reward do listu a uloží
         
-    def update_df_rewards(self):
-        self.data_frame = pd.DataFrame(self.list_of_all_reward_objects, columns=["date_of_creation", "reward_name", "time", "finished"])
-        self.data_frame.to_pickle(self.file_data_frame_reward)
+        Args:
+            reward: [date, name, time, finished]
+        """
+        self.list_of_all_reward_objects.append(reward)
+        self.update_data_frame()
+    
+    def update_data_frame(self):
+        """
+        Uloží list zpět do DataFrame a uloží do pickle souboru
+        """
+        self.data_frame = pd.DataFrame(self.list_of_all_reward_objects, 
+                                       columns=["date", "name", "time", "finished"])
+        self.data_frame.to_pickle(self.reward_dataframe)
         
     

@@ -13,22 +13,36 @@ sys.stdout.reconfigure(encoding='utf-8')
 
 class Note:
     def __init__(self):
-        # Vytvoř data složku pokud neexistuje
-        os.makedirs("data", exist_ok=True)
-        self.notes_file = "data/notes_file.pkl"
+        """
+        Inicializace Note - načte notes ze souboru
+        """
+        # Nastavení cesty
+        self.notes_file = "data/active/notes_file.pkl"
+        
+        # Vytvoř složku pokud neexistuje
+        os.makedirs("data/active", exist_ok=True)
+        
+        # Načti data ze souboru
         if os.path.exists(self.notes_file):
-            self.notes_file = "data/active/notes_file.pkl"  # ← ZMĚNA
+            # Soubor existuje - načti ho
+            self.data_frame = pd.read_pickle(self.notes_file)  # ← PŘIDEJ!
             self.list_of_all_notes_objects = self.data_frame.values.tolist()
+            print(f"✅ Načteno {len(self.list_of_all_notes_objects)} notes")
         else:
-            self.data_frame = pd.DataFrame()
+            # Soubor neexistuje - vytvoř prázdný DataFrame
+            print("⚠️ Notes soubor neexistuje - vytváření prázdného")
+            self.data_frame = pd.DataFrame(columns=["date", "subclass", "topic", "text"])
             self.list_of_all_notes_objects = []
+            
+            # Ulož prázdný soubor
+            self.update_data_frame()
 
     def create_note(self, note):# date, subclass, topic, text):
         self.list_of_all_notes_objects.append(note)
-        self.update_df_note()
+        self.update_data_frame()
 
 
-    def update_df_note(self):
+    def update_data_frame(self):
         
 
         self.data_frame = pd.DataFrame(self.list_of_all_notes_objects, columns=["date", "subclass", "topic", "text"])

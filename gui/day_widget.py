@@ -77,11 +77,15 @@ class DayWidget(QWidget):
         """
         # Vytvoř menu
         menu = QMenu(self)
+
+
         
         # Přidej akce (možnosti)
         add_task_action = menu.addAction("Add Task")
         add_note_action = menu.addAction("Add Note")    
         add_reward_action = menu.addAction("Add Reward")
+        add_review_action = menu.addAction("Review day")
+        add_review_rewards_action = menu.addAction("Review rewards")
         
         # Zobraz menu a čekej na kliknutí
         action = menu.exec_(self.mapToGlobal(position))
@@ -93,6 +97,10 @@ class DayWidget(QWidget):
             self.parent_window.add_note_for_date(self.date)
         elif action == add_reward_action:
             self.parent_window.add_reward_for_date(self.date)
+        elif action == add_review_action:
+            self.parent_window.review_day(self.date)
+        elif action == add_review_rewards_action:  
+            self.parent_window.review_rewards(self.date)
 
 
     def update_content(self, date, day_name, all_tasks_obj, note_obj=None, reward_obj=None):
@@ -120,11 +128,28 @@ class DayWidget(QWidget):
         
         # Formátuj datum
         date_str = f"{date.day}.{date.month}"
+
+        # Zjisti jestli je to dnešní den
+        today = datetime.now().date()
+        is_today = (date.date() == today)
         
         # Vytvoř nový day_label
         day_label = QLabel(f"{day_name}\n{date_str}")
         day_label.setAlignment(Qt.AlignCenter)
-        day_label.setStyleSheet("color: white; font-size: 18px;")
+        
+        # Styling - zvýrazni dnešní den
+        if is_today:
+            day_label.setStyleSheet("""
+                background-color: white;
+                color: black;
+                font-size: 18px;
+                font-weight: bold;
+                padding: 5px;
+                border-radius: 5px;
+            """)
+        else:
+            day_label.setStyleSheet("color: white; font-size: 18px;")
+
         self.layout.addWidget(day_label)
         
         # Získej tasky pro tento den
@@ -135,16 +160,28 @@ class DayWidget(QWidget):
             task_name = task[0]
             task_hours = task[3]
             
-            # Zkrať název pokud je moc dlouhý
+            # ===== PŘIDEJ TOTO =====
+            # Zkontroluj jestli má review
+            has_review = False
+            if len(task) > 5:
+                review = task[5]
+                if isinstance(review, list) and len(review) > 0:
+                    has_review = any(r.strip() for r in review if r)
+            
+            # Ikona podle review
+            icon = "✅" if has_review else "•"
+            # ===== KONEC =====
+            
+            # Zkrať název
             max_length = 18    
             display_name = task_name if len(task_name) <= max_length else task_name[:max_length] + "..."
             
-            task_label = QLabel(f"• {display_name}\n ({task_hours}h)")
+            task_label = QLabel(f"{icon} {display_name}\n   ({task_hours}h)")  # ← ZMĚNĚNO (icon místo •)
             task_label.setAlignment(Qt.AlignLeft)
             task_label.setStyleSheet("color: lightgray; font-size: 14px; padding-left: 10px;")
             task_label.setToolTip(task_name)
             self.layout.addWidget(task_label)
-        
+
         # ===== ZOBRAZENÍ NOTES PRO TENTO DEN =====
         if self.note_obj:  # Kontrola jestli máme note_obj
             notes_for_day = self.get_notes_for_date(date, self.note_obj)
