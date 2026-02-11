@@ -34,6 +34,7 @@ class CyclesHistoryDialog(QDialog):
         # Nadpis
         title = QLabel("📊 Cycles History")
         title.setStyleSheet("font-size: 20px; font-weight: bold; color: white;")
+        title.setAlignment(Qt.AlignCenter)
         layout.addWidget(title)
         
         # Tabulka cyklů
@@ -50,10 +51,10 @@ class CyclesHistoryDialog(QDialog):
         # Styling tabulky
         self.table.setStyleSheet("""
             QTableWidget {
-                background-color: #2D2D2D;
+                background-color: black;
                 color: white;
-                border: 1px solid #3D3D3D;
-                gridline-color: #3D3D3D;
+                border: 1px solid white;
+                gridline-color: white;
             }
             QTableWidget::item {
                 padding: 8px;
@@ -62,10 +63,10 @@ class CyclesHistoryDialog(QDialog):
                 background-color: #3D3D3D;
             }
             QHeaderView::section {
-                background-color: #1E1E1E;
+                background-color: black;
                 color: white;
                 padding: 8px;
-                border: 1px solid #3D3D3D;
+                border: 1px solid white;
                 font-weight: bold;
             }
         """)
@@ -84,15 +85,15 @@ class CyclesHistoryDialog(QDialog):
         close_button = QPushButton("Close")
         close_button.setStyleSheet("""
             QPushButton {
-                background-color: #3D3D3D;
-                color: white;
+                background-color: white;
+                color: black;
                 padding: 10px;
                 font-size: 14px;
                 border: none;
                 border-radius: 5px;
             }
             QPushButton:hover {
-                background-color: #555555;
+                background-color: #E0E0E0;
             }
         """)
         close_button.clicked.connect(self.accept)
@@ -103,7 +104,7 @@ class CyclesHistoryDialog(QDialog):
         # Styling dialogu
         self.setStyleSheet("""
             QDialog {
-                background-color: #1E1E1E;
+                background-color: black;
             }
         """)
     
@@ -164,3 +165,43 @@ class CyclesHistoryDialog(QDialog):
             duration_item = QTableWidgetItem(f"{duration_days} days")
             duration_item.setTextAlignment(Qt.AlignCenter)
             self.table.setItem(row, 4, duration_item)
+        
+        self.table.cellDoubleClicked.connect(self.open_cycle)
+        
+    def open_cycle(self, row, column):
+        """
+        Otevře archivovaný cyklus v read-only režimu
+        """
+        cycles = self.cycles_manager.get_all_cycles_summary()
+        cycles_sorted = sorted(cycles, key=lambda c: c['id'], reverse=True)
+        
+        selected_cycle = cycles_sorted[row]
+        
+        # Pokud je to aktivní cyklus, neotevírej (už je otevřený v main window)
+        if selected_cycle['status'] == 'active':
+            from PyQt5.QtWidgets import QMessageBox
+            QMessageBox.information(
+                self,
+                "Active Cycle",
+                "This is the currently active cycle.\nIt's already displayed in the main window."
+            )
+            return
+        
+        # Načti data z archive
+        cycle_id = selected_cycle['id']
+        archive_file = selected_cycle.get('archive_file')
+        
+        if not archive_file:
+            from PyQt5.QtWidgets import QMessageBox
+            QMessageBox.warning(
+                self,
+                "No Archive",
+                f"Cycle #{cycle_id} has no archive file."
+            )
+            return
+        
+        # Otevři archived cycle viewer
+        from gui.archived_cycle_viewer import ArchivedCycleViewer
+        
+        viewer = ArchivedCycleViewer(cycle_id, archive_file, self.cycles_manager, self)
+        viewer.exec_()

@@ -9,6 +9,7 @@ Struktura:
 
 import os
 import pickle
+import pandas as pd
 from datetime import datetime, timedelta
 
 
@@ -192,18 +193,43 @@ class CyclesManager:
     
     def _clear_active_directory(self):
         """
-        Smaže všechny .pkl soubory z data/active/
+        Smaže všechny .pkl soubory z data/active/ a vytvoří prázdné
         """
-        # Projdi všechny soubory v active/
-        for filename in os.listdir(self.active_dir):
+        
+        
+        files_to_delete = [
+            "tasks_dataframe.pkl",
+            "goals_dataframe.pkl",
+            "notes_file.pkl",
+            "reward_dataframe.pkl",
+            "settings_dataframe.pkl"
+        ]
+        
+        # Smaž staré soubory
+        for filename in files_to_delete:
             filepath = os.path.join(self.active_dir, filename)
-            
-            # Jestli je to soubor (ne složka)
-            if os.path.isfile(filepath):
-                os.remove(filepath)  # Smaž ho
+            if os.path.exists(filepath):
+                os.remove(filepath)
                 print(f"  🗑️ Smazán {filename}")
         
         print("✅ Active složka vyčištěna")
+        
+        # Vytvoř prázdné soubory pro nový cyklus
+        print("  📝 Vytvářím prázdné soubory...")
+        
+        empty_tasks = pd.DataFrame(columns=["name", "subclass", "date", "hours", "score", "review"])
+        empty_goals = pd.DataFrame(columns=["goal_name", "subclass", "timer", "average_score", "date_of_creation", "checked", "end_date", "completed"])
+        empty_notes = pd.DataFrame(columns=["date", "subclass", "topic", "text"])
+        empty_rewards = pd.DataFrame(columns=["date", "name", "time", "finished", "actual_time"])
+        empty_settings = pd.DataFrame(columns=["goals_set"])
+        
+        empty_tasks.to_pickle(f"{self.active_dir}/tasks_dataframe.pkl")
+        empty_goals.to_pickle(f"{self.active_dir}/goals_dataframe.pkl")
+        empty_notes.to_pickle(f"{self.active_dir}/notes_file.pkl")
+        empty_rewards.to_pickle(f"{self.active_dir}/reward_dataframe.pkl")
+        empty_settings.to_pickle(f"{self.active_dir}/settings_dataframe.pkl")
+        
+        print("✅ Prázdné soubory vytvořeny")
     
     def needs_new_cycle(self):
         """

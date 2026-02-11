@@ -75,9 +75,24 @@ class DayWidget(QWidget):
         """
         Zobrazí context menu při pravém kliknutí
         """
+        
         # Vytvoř menu
         menu = QMenu(self)
-
+        
+        #Styling
+        menu.setStyleSheet("""
+            QMenu {
+                background-color: black;
+                color: white;
+                border: 1px solid white;
+            }
+            QMenu::item {
+                padding: 8px 20px;
+            }
+            QMenu::item:selected {
+                background-color: #3D3D3D;
+            }
+    """)
 
         
         # Přidej akce (možnosti)
@@ -219,8 +234,19 @@ class DayWidget(QWidget):
                 reward_time = reward[2]  # time
                 reward_finished = reward[3]  # finished
                 
-                # Ikona podle toho jestli je splněno
-                icon = "✅" if reward_finished else "🎁"
+                # ===== KONTROLA JESTLI JE ZREVIEWOVANÁ =====
+                is_reviewed = False
+                if len(reward) > 4:
+                    actual_time = reward[4]  # actual_time
+                    # Je reviewed pokud má actual_time NEBO je finished
+                    is_reviewed = reward_finished or (actual_time is not None and actual_time != reward_time)
+                
+                # Ikona podle stavu
+                if is_reviewed:
+                    icon = "✅"  # Zreviewovaná (splněná NEBO má actual_time)
+                else:
+                    icon = "🎁"  # Nezreviewovaná
+                # ===== KONEC KONTROLY =====
                 
                 # Zkrať název pokud je moc dlouhý
                 max_length = 18  # O trochu kratší kvůli ikoně

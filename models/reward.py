@@ -63,7 +63,7 @@ class Reward:
         Uloží list zpět do DataFrame a uloží do pickle souboru
         """
         self.data_frame = pd.DataFrame(self.list_of_all_reward_objects, 
-                                       columns=["date", "name", "time", "finished"])
+                                       columns=["date", "name", "time", "finished", "actual_time"])
         self.data_frame.to_pickle(self.reward_dataframe)
         
     

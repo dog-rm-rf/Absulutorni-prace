@@ -334,9 +334,9 @@ class WeekView(QMainWindow):
         # Styling
         menu.setStyleSheet("""
             QMenu {
-                background-color: #2D2D2D;
+                background-color: black;
                 color: white;
-                border: 2px solid #3D3D3D;
+                border: 2px solid white;
                 border-radius: 5px;
                 padding: 10px;
                 font-size: 14px;
@@ -350,7 +350,7 @@ class WeekView(QMainWindow):
             }
             QMenu::separator {
                 height: 2px;
-                background-color: #3D3D3D;
+                background-color: white;
                 margin: 8px 0px;
             }
         """)
@@ -407,7 +407,15 @@ class WeekView(QMainWindow):
         # Zobraz menu pod hamburger buttonem
         button_pos = self.menu_button.mapToGlobal(self.menu_button.rect().bottomLeft())
         menu.exec_(button_pos)
-            
+    
+    def show_statistics(self):
+        """
+        Zobrazí statistiky
+        """
+        from gui.statistics_dialog import StatisticsDialog
+        
+        dialog = StatisticsDialog(self.cycles_manager, self.all_tasks, self.goal, self)
+        dialog.exec_()
 
     def calculate_current_week(self):
         """
@@ -842,8 +850,13 @@ class WeekView(QMainWindow):
         dialog.exec_()
 
     def show_statistics(self):
-        from PyQt5.QtWidgets import QMessageBox
-        QMessageBox.information(self, "Statistics", "Coming soon! 📊")
+        """
+        Zobrazí statistiky
+        """
+        from gui.statistics_dialog import StatisticsDialog
+        
+        dialog = StatisticsDialog(self.cycles_manager, self.all_tasks, self.goal, self)
+        dialog.exec_()
 
     def manage_goals(self):
         self.open_management_dialog()
