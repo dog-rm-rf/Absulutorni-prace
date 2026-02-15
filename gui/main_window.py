@@ -582,7 +582,7 @@ class WeekView(QMainWindow):
         Otevře popup pro přidání tasku k danému datu
         """
         # Vytvoř a zobraz dialog
-        dialog = AddTaskDialog(date, self)
+        dialog = AddTaskDialog(date, self, self.goal.list_of_all_goals_objects)
         
         # Čekej na odpověď (uživatel klikne Save nebo Cancel)
         result = dialog.exec_()

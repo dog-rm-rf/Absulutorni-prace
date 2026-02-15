@@ -1,5 +1,5 @@
 from PyQt5.QtWidgets import (QDialog, QVBoxLayout, QFormLayout, QLabel, 
-                             QLineEdit, QSpinBox, QHBoxLayout, QPushButton)
+                            QLineEdit, QSpinBox, QHBoxLayout, QPushButton, QComboBox)
 
 
 # ===== DIALOG PRO PŘIDÁNÍ TASKU =====
@@ -7,10 +7,11 @@ class AddTaskDialog(QDialog):
     """
     Popup dialog pro přidání nového tasku
     """
-    def __init__(self, date, parent=None):
+    def __init__(self, date, parent=None, goals=None):
         super().__init__(parent)
         self.date = date
         self.task_data = None  # Sem uložíme data když user klikne Save
+        self.goals = goals or []
         
         # Nastavení okna
         self.setWindowTitle("Add Task")
@@ -34,8 +35,38 @@ class AddTaskDialog(QDialog):
         form_layout.addRow("Task Name:", self.task_name_input)
         
         # Subclass
-        self.subclass_input = QLineEdit()
-        self.subclass_input.setPlaceholderText("e.g. programming, health")
+        self.subclass_input = QComboBox()
+        self.subclass_input.setEditable(True)
+        self.subclass_input.setPlaceholderText("Select or type category...")
+
+        # Načti kategorie z goals
+        categories = self.get_categories_from_goals()
+
+        if categories:
+            self.subclass_input.addItems(categories)
+        else:
+            # Žádné goals - defaultní kategorie
+            self.subclass_input.addItems(["general", "programming", "learning", "fitness"])
+        
+        self.subclass_input.setStyleSheet("""
+            QComboBox {
+                background-color: black;
+                color: white;
+                border: 1px solid white;
+                padding: 3px;
+                font-size: 14px;
+            }
+            QComboBox::drop-down {
+                border: none;
+            }
+            QComboBox QAbstractItemView {
+                background-color: black;
+                color: white;
+                selection-background-color: #3D3D3D;
+                border: 1px solid white;
+            }
+        """)
+
         form_layout.addRow("Subclass:", self.subclass_input)
         
         # Hours a Minutes - vytvoř horizontal layout
@@ -81,6 +112,47 @@ class AddTaskDialog(QDialog):
         layout.addLayout(buttons_layout)
         
         self.setLayout(layout)
+        if categories:
+            self.subclass_input.addItems(categories)
+        else:
+            # Žádné goals - defaultní kategorie
+            self.subclass_input.addItems(["general", "programming", "learning", "fitness"])
+        
+        self.subclass_input.setStyleSheet("""
+            QComboBox {
+                background-color: black;
+                color: white;
+                border: 1px solid white;
+                padding: 3px;
+                font-size: 14px;
+            }
+            QComboBox::drop-down {
+                border: none;
+            }
+            QComboBox QAbstractItemView {
+                background-color: black;
+                color: white;
+                selection-background-color: #3D3D3D;
+                border: 1px solid white;
+            }
+        """)
+
+    def get_categories_from_goals(self):
+        """
+        Načte unikátní kategorie (subclass) z goals
+        
+        Returns:
+            list: ["programming", "learning", "fitness", ...]
+        """
+        categories = []
+        
+        for goal in self.goals:
+            if len(goal) > 1:
+                subclass = goal[1]  # Index 1 = subclass
+                if subclass and subclass not in categories:
+                    categories.append(subclass)
+        
+        return sorted(categories)  # Abecedně seřazené
     
     def save_task(self):
         """
@@ -88,7 +160,7 @@ class AddTaskDialog(QDialog):
         """
         # Získej hodnoty z inputů
         task_name = self.task_name_input.text().strip()
-        subclass = self.subclass_input.text().strip()
+        subclass = self.subclass_input.currentText().strip()
         # Získej hodiny a minuty
         hours = self.hours_input.value()
         minutes = self.minutes_input.value()
