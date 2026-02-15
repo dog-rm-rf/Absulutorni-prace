@@ -1,28 +1,27 @@
-# fix_rewards.py
 import pandas as pd
-import os
+from datetime import datetime
 
-file_path = "data/active/reward_dataframe.pkl"
+# Načti tasky
+df = pd.read_pickle("data/active/tasks_dataframe.pkl")
 
-if os.path.exists(file_path):
-    # Načti starý DataFrame
-    df = pd.read_pickle(file_path)
-    
-    print(f"Staré sloupce: {df.columns.tolist()}")
-    print(f"Počet rewards: {len(df)}")
-    
-    # Přidej sloupec actual_time
-    if 'actual_time' not in df.columns:
-        # Zkopíruj hodnotu z 'time' sloupce
-        df['actual_time'] = df['time']
-        
-        print(f"\n✅ Přidán sloupec 'actual_time'")
-        print(f"Nové sloupce: {df.columns.tolist()}")
-        
-        # Ulož zpět
-        df.to_pickle(file_path)
-        print(f"\n✅ Soubor uložen: {file_path}")
-    else:
-        print("\n⚠️ Sloupec 'actual_time' už existuje")
-else:
-    print(f"❌ Soubor neexistuje: {file_path}")
+print("=" * 60)
+print("📊 ANALÝZA TASKŮ")
+print("=" * 60)
+
+print(f"\n📈 Celkový počet tasků: {len(df)}")
+
+print("\n📅 Rozsah datumů:")
+print(f"   První task: {df['date'].min()}")
+print(f"   Poslední task: {df['date'].max()}")
+
+print("\n🔍 První 5 tasků:")
+print(df[['activity', 'date', 'desired_time_spent_hours']].head())
+
+print("\n🔍 Posledních 5 tasků:")
+print(df[['activity', 'date', 'desired_time_spent_hours']].tail())
+
+print("\n📊 Tasky podle měsíců:")
+df['month'] = df['date'].dt.strftime('%Y-%m')
+print(df['month'].value_counts().sort_index())
+
+print("\n" + "=" * 60)
