@@ -268,12 +268,9 @@ class ArchivedCycleViewer(QDialog):
     def same_date(self, date1, date2):
         """
         Porovná dvě data (ignoruje čas)
+        Zvládne datetime, date i pandas.Timestamp
         """
-        if isinstance(date1, datetime):
-            date1 = date1.date()
-        if isinstance(date2, datetime):
-            date2 = date2.date()
-        return date1 == date2
+        return self.to_date(date1) == self.to_date(date2)
     
     def previous_week(self):
         """
