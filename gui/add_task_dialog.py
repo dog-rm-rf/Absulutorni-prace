@@ -1,5 +1,5 @@
 from PyQt5.QtWidgets import (QDialog, QVBoxLayout, QFormLayout, QLabel, 
-                            QLineEdit, QSpinBox, QHBoxLayout, QPushButton, QComboBox)
+                            QLineEdit, QSpinBox, QHBoxLayout, QPushButton, QComboBox, QMessageBox)
 
 
 # ===== DIALOG PRO PŘIDÁNÍ TASKU =====
@@ -112,30 +112,7 @@ class AddTaskDialog(QDialog):
         layout.addLayout(buttons_layout)
         
         self.setLayout(layout)
-        if categories:
-            self.subclass_input.addItems(categories)
-        else:
-            # Žádné goals - defaultní kategorie
-            self.subclass_input.addItems(["general", "programming", "learning", "fitness"])
         
-        self.subclass_input.setStyleSheet("""
-            QComboBox {
-                background-color: black;
-                color: white;
-                border: 1px solid white;
-                padding: 3px;
-                font-size: 14px;
-            }
-            QComboBox::drop-down {
-                border: none;
-            }
-            QComboBox QAbstractItemView {
-                background-color: black;
-                color: white;
-                selection-background-color: #3D3D3D;
-                border: 1px solid white;
-            }
-        """)
 
     def get_categories_from_goals(self):
         """
@@ -170,8 +147,7 @@ class AddTaskDialog(QDialog):
         
         # Validace
         if not task_name:
-            # TODO: Zobrazit chybovou hlášku
-            print("ERROR: Task name is required!")
+            QMessageBox.warning(self, "Missing Task Name", "Please enter a task name.")
             return
         
         # Ulož data (v formátu pro all_tasks.add_new_task)

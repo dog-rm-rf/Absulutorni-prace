@@ -1,5 +1,5 @@
 from PyQt5.QtWidgets import (QDialog, QVBoxLayout, QFormLayout, QLabel, 
-                             QLineEdit, QTextEdit, QHBoxLayout, QPushButton)
+                             QLineEdit, QTextEdit, QHBoxLayout, QPushButton, QMessageBox)
 
 
 # ===== DIALOG PRO PŘIDÁNÍ NOTE =====
@@ -77,11 +77,11 @@ class AddNoteDialog(QDialog):
         
         # Validace
         if not topic:
-            print("ERROR: Topic is required!")
+            QMessageBox.warning(self, "Missing Topic", "Please enter a topic for the note.")
             return
         
         if not text:
-            print("ERROR: Note text is required!")
+            QMessageBox.warning(self, "Missing Text", "Please enter some text for the note.")
             return
         
         # Ulož data (v formátu pro note.create_note)

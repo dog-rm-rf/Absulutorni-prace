@@ -4,10 +4,11 @@ Archived Cycle Viewer - zobrazení archivovaného cyklu (read-only)
 
 import pickle
 import os
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, date as date_type
 from PyQt5.QtWidgets import (QDialog, QVBoxLayout, QHBoxLayout, QLabel, 
                              QPushButton, QFrame, QScrollArea, QWidget)
 from PyQt5.QtCore import Qt
+import pandas as pd
 
 
 class ArchivedCycleViewer(QDialog):
@@ -241,6 +242,28 @@ class ArchivedCycleViewer(QDialog):
         widget.setLayout(layout)
         
         return widget
+    
+    def to_date(self, value):
+        """
+        Bezpečně převede jakýkoliv datumový typ na datetime.date
+        
+        Zvládne: datetime, date, pandas.Timestamp
+        
+        Args:
+            value: Datumová hodnota libovolného typu
+            
+        Returns:
+            datetime.date
+        """
+        if isinstance(value, datetime):
+            return value.date()
+        elif isinstance(value, date_type):
+            return value
+        elif isinstance(value, pd.Timestamp):
+            return value.date()
+        else:
+            # Fallback — zkus převést přes str
+            return value
     
     def same_date(self, date1, date2):
         """

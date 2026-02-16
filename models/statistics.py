@@ -266,17 +266,116 @@ class Statistics:
             self.get_tasks_for_period(current_period), 
             category
         )
-        current_reviewed = self.get_reviewed_tasks(current_tasks)
+        active_cycle = self.cycles_manager.get_active_cycle()
         
-        if not current_reviewed:
+        if not active_cycle:
             return 0.0
         
+        now = datetime.now()
+        start_date = active_cycle['start_date']
+        
+        # ===== VYPOČÍTEJ HRANICE AKTUÁLNÍHO A PŘEDCHOZÍHO OBDOBÍ =====
+        
+        if current_period == "current_week":
+            # Aktuální týden vs předchozí týden
+            days_since_start = (now - start_date).days
+            current_week = (days_since_start // 7) + 1
+            
+            # Aktuální týden
+            current_week_offset = (current_week - 1) * 7
+            current_start = start_date + timedelta(days=current_week_offset)
+            current_end = current_start + timedelta(days=7)
+            
+            # Předchozí týden
+            if current_week <= 1:
+                return 0.0  # Žádný předchozí týden
+            
+            previous_start = current_start - timedelta(days=7)
+            previous_end = current_start
+        
+        elif current_period == "last_6_weeks":
+            # Posledních 6 týdnů vs 6 týdnů před tím
+            current_start = now - timedelta(days=42)
+            current_end = now
+            
+            previous_start = current_start - timedelta(days=42)
+            previous_end = current_start
+        
+        elif current_period == "current_cycle":
+            # První polovina vs druhá polovina cyklu
+            cycle_midpoint = start_date + timedelta(days=42)  # 6 týdnů
+            
+            # Druhá polovina (current)
+            current_start = cycle_midpoint
+            current_end = active_cycle['end_date']
+            
+            # První polovina (previous)
+            previous_start = start_date
+            previous_end = cycle_midpoint
+        
+        else:
+            # all_time - trend není relevantní
+            return 0.0
+        
+        # ===== ZÍSKEJ TASKY PRO OBĚ OBDOBÍ =====
+        
+        current_tasks = self._get_tasks_for_date_range(
+            category, current_start, current_end
+        )
+        previous_tasks = self._get_tasks_for_date_range(
+            category, previous_start, previous_end
+        )
+        
+        # Získej jen reviewed tasky
+        current_reviewed = self.get_reviewed_tasks(current_tasks)
+        previous_reviewed = self.get_reviewed_tasks(previous_tasks)
+        
+        # Potřebujeme alespoň 1 reviewed task v každém období
+        if not current_reviewed or not previous_reviewed:
+            return 0.0
+    
+        
         current_avg = sum(t[4] for t in current_reviewed) / len(current_reviewed)
+        previous_avg = sum(t[4] for t in previous_reviewed) / len(previous_reviewed)
         
-        # TODO: Implementuj porovnání s předchozím obdobím
-        # Pro teď vrátíme 0 (žádný trend)
+        trend = current_avg - previous_avg
         
-        return 0.0
+        return round(trend, 1)
+    
+    def _get_tasks_for_date_range(self, category, start_date, end_date):
+        """
+        Pomocná funkce - vrátí tasky dané kategorie v daném rozsahu dat
+        
+        Args:
+            category: Název kategorie (subclass)
+            start_date: Začátek období (datetime)
+            end_date: Konec období (datetime)
+        
+        Returns:
+            list: Filtrované tasky
+        """
+        result = []
+        
+        # Převeď na date pro porovnání
+        if isinstance(start_date, datetime):
+            start_date = start_date.date()
+        if isinstance(end_date, datetime):
+            end_date = end_date.date()
+        
+        for task in self.all_tasks.list_of_all_tasks_objects:
+            # Filtruj podle kategorie
+            if task[1] != category:
+                continue
+            
+            # Filtruj podle data
+            task_date = task[2]
+            if isinstance(task_date, datetime):
+                task_date = task_date.date()
+            
+            if start_date <= task_date < end_date:
+                result.append(task)
+        
+        return result
     
     # ===== BEST/WORST PERFORMERS =====
     

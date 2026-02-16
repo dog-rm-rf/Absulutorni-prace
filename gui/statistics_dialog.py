@@ -210,11 +210,11 @@ class StatisticsDialog(QDialog):
         self.overview_layout.addWidget(section_label)
         
         stats_text = f"""
-Total Tasks: {overview['total_tasks']}
-Total Hours: {overview['total_hours']}h
-Average Score: {overview['avg_score']}/10
-Reviewed: {overview['reviewed_count']}/{overview['total_tasks']} ({overview['review_rate']}%)
-        """
+        Total Tasks: {overview['total_tasks']}
+        Total Hours: {overview['total_hours']}h
+        Average Score: {overview['avg_score']}/10
+        Reviewed: {overview['reviewed_count']}/{overview['total_tasks']} ({overview['review_rate']}%)
+                """
         
         stats_label = QLabel(stats_text)
         stats_label.setStyleSheet("color: white; font-size: 14px; margin-left: 20px;")

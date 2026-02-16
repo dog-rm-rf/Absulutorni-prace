@@ -1,5 +1,5 @@
 from PyQt5.QtWidgets import (QDialog, QVBoxLayout, QFormLayout, QLabel, 
-                             QLineEdit, QSpinBox, QHBoxLayout, QPushButton)
+                             QLineEdit, QSpinBox, QHBoxLayout, QPushButton, QMessageBox)
 
 
 # ===== DIALOG PRO PŘIDÁNÍ REWARD =====
@@ -84,7 +84,7 @@ class AddRewardDialog(QDialog):
         
         # Validace
         if not reward_name:
-            print("ERROR: Reward name is required!")
+            QMessageBox.warning(self, "Missing Reward Name", "Please enter a reward name.")
             return
         
         # Převeď na desetinné číslo
