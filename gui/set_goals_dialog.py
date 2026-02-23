@@ -36,15 +36,14 @@ class SetGoalsDialog(QDialog):
         
         # Popis
         description_label = QLabel(
-            "These goals will guide your tasks and activities.\n"
-            "Be specific and measurable!"
+            "Most importatnt thing it to execute!"
         )
         description_label.setAlignment(Qt.AlignCenter)
         description_label.setWordWrap(True)
         description_label.setFixedHeight(50) 
         description_label.setStyleSheet("""
             color: gray;
-            font-size: 13px;
+            font-size: 15px;
             padding: 5px;
         """)
         main_layout.addWidget(description_label)
