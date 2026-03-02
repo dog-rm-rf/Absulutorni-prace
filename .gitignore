@@ -14,4 +14,4 @@ __pycache__/
 # Pokud máš ve složce data velké soubory, které nechceš na GitHubu:
 data/
 
-*.pyc
+
