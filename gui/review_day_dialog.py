@@ -171,7 +171,14 @@ class ReviewDayDialog(QDialog):
         score_input = QSpinBox()
         score_input.setMinimum(0)
         score_input.setMaximum(10)
-        score_input.setValue(int(current_score) if current_score else 0)
+        # Původní kód:
+        # score_input.setValue(int(current_score) if current_score else 0)
+        
+        try:
+            safe_score = int(current_score)
+        except (ValueError, TypeError):
+            safe_score = 0
+        score_input.setValue(safe_score)
         score_input.setStyleSheet("""
             QSpinBox {
                 background-color: black;
