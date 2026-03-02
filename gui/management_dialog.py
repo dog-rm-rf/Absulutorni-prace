@@ -73,6 +73,10 @@ class ManagementDialog(QDialog):
         add_btn = QPushButton("Add Goal")
         add_btn.clicked.connect(self.add_goal)
         buttons_layout.addWidget(add_btn)
+
+        edit_btn = QPushButton("Edit Goal")
+        edit_btn.clicked.connect(self.edit_goal)
+        buttons_layout.addWidget(edit_btn)
         
         delete_btn = QPushButton("Delete Goal")
         delete_btn.clicked.connect(self.delete_goal)
@@ -86,6 +90,42 @@ class ManagementDialog(QDialog):
         
         widget.setLayout(layout)
         return widget
+    
+    def edit_goal(self):
+        """
+        Otevře dialog pro editaci goalu
+        """
+        current_item = self.goals_list.currentItem()
+        if not current_item:
+            QMessageBox.warning(self, "No Selection", "Please select a goal to edit.")
+            return
+        
+        # Získej goal data
+        goal = current_item.data(Qt.UserRole)
+        
+        # Otevři Edit Goal Dialog
+        from .edit_goal_dialog import EditGoalDialog
+        
+        dialog = EditGoalDialog(goal, self)
+        result = dialog.exec_()
+        
+        if result == QDialog.Accepted:
+            # Aktualizuj goal data
+            updated_goal = dialog.goal_data
+            
+            # Najdi index v listu
+            index = self.goal.list_of_all_goals_objects.index(goal)
+            
+            # Nahraď starý goal novým
+            self.goal.list_of_all_goals_objects[index] = updated_goal
+            
+            # Ulož
+            self.goal.update_data_frame()
+            
+            # Refresh
+            self.refresh_goals_list()
+            
+            print(f"✅ Goal updated: {updated_goal[0]}")
     
     def refresh_goals_list(self):
         self.goals_list.clear()
